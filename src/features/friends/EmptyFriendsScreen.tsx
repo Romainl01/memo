@@ -1,0 +1,99 @@
+import { View, Text, StyleSheet, Alert } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SymbolView } from "expo-symbols";
+import { GlassButton } from "@/src/components/GlassButton";
+import { colors } from "@/src/constants/colors";
+import { typography } from "@/src/constants/typography";
+
+/**
+ * Empty state screen shown when the user has no friends added yet.
+ * Features liquid glass buttons for the + icon and "Add a friend" CTA.
+ *
+ * TODO: Add fallback icon for Android/Web using @expo/vector-icons
+ * The SymbolView "plus" icon only works on iOS.
+ */
+export function EmptyFriendsScreen() {
+  const insets = useSafeAreaInsets();
+
+  const handleAddFriend = () => {
+    Alert.alert("Coming Soon", "Add friend feature will be available soon!");
+  };
+
+  return (
+    <View style={[styles.container, { paddingTop: insets.top }]}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.title}>Pia</Text>
+        <GlassButton
+          onPress={handleAddFriend}
+          size={40}
+          icon={
+            <SymbolView
+              name="plus"
+              size={22}
+              weight="semibold"
+              tintColor={colors.primary}
+            />
+          }
+          testID="add-friend-button"
+        />
+      </View>
+
+      {/* Hero Section */}
+      <View style={styles.heroContainer}>
+        <View style={styles.hero}>
+          <Text style={styles.heroTitle}>Keep your closest within reach</Text>
+          <Text style={styles.heroSubtitle}>
+            Add friends to stay in touch, share memories, and never miss a
+            birthday
+          </Text>
+          <GlassButton
+            onPress={handleAddFriend}
+            label="Add a friend"
+            testID="add-friend-cta"
+          />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.surfaceLight,
+    paddingHorizontal: 16,
+  },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 16,
+    paddingBottom: 16,
+  },
+  title: {
+    ...typography.titleH1,
+    color: colors.neutralDark,
+  },
+  heroContainer: {
+    flex: 1,
+    justifyContent: "center",
+    // Offset slightly up from true center to match Figma's visual weight
+    paddingBottom: 120,
+  },
+  hero: {
+    alignItems: "center",
+    gap: 16,
+  },
+  heroTitle: {
+    ...typography.titleH1,
+    color: colors.neutralGray300,
+    textAlign: "center",
+  },
+  heroSubtitle: {
+    ...typography.body1,
+    color: colors.neutralGray300,
+    textAlign: "center",
+    lineHeight: 24,
+  },
+});

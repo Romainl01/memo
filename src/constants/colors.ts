@@ -13,9 +13,10 @@ export const colors = {
   neutralWhite: '#FFFFFF',
   neutralGray: '#6A7282',
   neutralGray200: '#D9DBE1',
+  neutralGray300: '#8A898E',
 
   // Surface
-  surfaceLight: '#F9FAFB',
+  surfaceLight: '#F9F7E8',
 
   // Feedback
   feedbackSuccess: '#0E9F6E',

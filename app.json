@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#F9F7E8"
     },
     "ios": {
       "supportsTablet": false,
@@ -22,7 +22,7 @@
       "package": "com.pia.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#F9F7E8"
       },
       "edgeToEdgeEnabled": true
     },

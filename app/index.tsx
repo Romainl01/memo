@@ -1,33 +1,9 @@
-import { View, Text, StyleSheet } from "react-native";
+import { Redirect } from "expo-router";
 
-export default function SplashScreen() {
-  return (
-    <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.emoji}>👋</Text>
-        <Text style={styles.title}>Pia</Text>
-      </View>
-    </View>
-  );
+/**
+ * Root index redirects to the tabs navigator.
+ * The Friends tab is set as the initial route in (tabs)/_layout.tsx.
+ */
+export default function Index() {
+  return <Redirect href="/(tabs)/friends" />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-  },
-  content: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  emoji: {
-    fontSize: 72,
-    marginBottom: 16,
-  },
-  title: {
-    fontFamily: "CrimsonPro_500Medium",
-    fontSize: 44,
-    color: "#262629",
-  },
-});
