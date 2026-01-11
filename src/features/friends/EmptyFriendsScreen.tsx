@@ -1,9 +1,13 @@
-import { View, Text, StyleSheet, Alert } from "react-native";
+import { View, Text, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
 import { GlassButton } from "@/src/components/GlassButton";
 import { colors } from "@/src/constants/colors";
 import { typography } from "@/src/constants/typography";
+
+interface EmptyFriendsScreenProps {
+  onAddFriend: () => void;
+}
 
 /**
  * Empty state screen shown when the user has no friends added yet.
@@ -12,12 +16,8 @@ import { typography } from "@/src/constants/typography";
  * TODO: Add fallback icon for Android/Web using @expo/vector-icons
  * The SymbolView "plus" icon only works on iOS.
  */
-export function EmptyFriendsScreen() {
+export function EmptyFriendsScreen({ onAddFriend }: EmptyFriendsScreenProps) {
   const insets = useSafeAreaInsets();
-
-  const handleAddFriend = () => {
-    Alert.alert("Coming Soon", "Add friend feature will be available soon!");
-  };
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -25,7 +25,7 @@ export function EmptyFriendsScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Pia</Text>
         <GlassButton
-          onPress={handleAddFriend}
+          onPress={onAddFriend}
           size={40}
           icon={
             <SymbolView
@@ -48,7 +48,7 @@ export function EmptyFriendsScreen() {
             birthday
           </Text>
           <GlassButton
-            onPress={handleAddFriend}
+            onPress={onAddFriend}
             label="Add a friend"
             testID="add-friend-cta"
           />

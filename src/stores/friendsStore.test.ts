@@ -1,0 +1,164 @@
+import { useFriendsStore, Friend } from './friendsStore';
+
+describe('friendsStore', () => {
+  // Reset store state before each test
+  beforeEach(() => {
+    useFriendsStore.setState({ friends: [] });
+  });
+
+  describe('initial state', () => {
+    it('should start with empty friends list', () => {
+      const { friends } = useFriendsStore.getState();
+      expect(friends).toEqual([]);
+    });
+  });
+
+  describe('addFriend', () => {
+    it('should add a friend to the list', () => {
+      const { addFriend } = useFriendsStore.getState();
+
+      const newFriend: Omit<Friend, 'id' | 'createdAt'> = {
+        name: 'John Doe',
+        photoUrl: 'https://example.com/photo.jpg',
+        birthday: '1992-12-15',
+        frequencyDays: 14,
+        lastContactAt: '2024-01-10',
+      };
+
+      addFriend(newFriend);
+
+      const { friends } = useFriendsStore.getState();
+      expect(friends).toHaveLength(1);
+      expect(friends[0].name).toBe('John Doe');
+      expect(friends[0].photoUrl).toBe('https://example.com/photo.jpg');
+      expect(friends[0].birthday).toBe('1992-12-15');
+      expect(friends[0].frequencyDays).toBe(14);
+      expect(friends[0].lastContactAt).toBe('2024-01-10');
+    });
+
+    it('should generate an id for the new friend', () => {
+      const { addFriend } = useFriendsStore.getState();
+
+      addFriend({
+        name: 'Jane Doe',
+        photoUrl: null,
+        birthday: '1990-05-20',
+        frequencyDays: 30,
+        lastContactAt: '2024-01-15',
+      });
+
+      const { friends } = useFriendsStore.getState();
+      expect(friends[0].id).toBeTruthy();
+      expect(typeof friends[0].id).toBe('string');
+    });
+
+    it('should add createdAt timestamp', () => {
+      const { addFriend } = useFriendsStore.getState();
+      const beforeAdd = new Date().toISOString();
+
+      addFriend({
+        name: 'Test User',
+        photoUrl: null,
+        birthday: '1985-03-10',
+        frequencyDays: 7,
+        lastContactAt: '2024-01-01',
+      });
+
+      const { friends } = useFriendsStore.getState();
+      const afterAdd = new Date().toISOString();
+
+      expect(friends[0].createdAt).toBeTruthy();
+      expect(friends[0].createdAt >= beforeAdd).toBe(true);
+      expect(friends[0].createdAt <= afterAdd).toBe(true);
+    });
+
+    it('should allow adding multiple friends', () => {
+      const { addFriend } = useFriendsStore.getState();
+
+      addFriend({ name: 'Friend 1', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+      addFriend({ name: 'Friend 2', photoUrl: null, birthday: '1991-02-02', frequencyDays: 14, lastContactAt: '2024-01-02' });
+      addFriend({ name: 'Friend 3', photoUrl: null, birthday: '1992-03-03', frequencyDays: 30, lastContactAt: '2024-01-03' });
+
+      const { friends } = useFriendsStore.getState();
+      expect(friends).toHaveLength(3);
+    });
+  });
+
+  describe('removeFriend', () => {
+    it('should remove a friend by id', () => {
+      const { addFriend, removeFriend } = useFriendsStore.getState();
+
+      addFriend({ name: 'To Remove', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+
+      const { friends: friendsAfterAdd } = useFriendsStore.getState();
+      const friendId = friendsAfterAdd[0].id;
+
+      removeFriend(friendId);
+
+      const { friends: friendsAfterRemove } = useFriendsStore.getState();
+      expect(friendsAfterRemove).toHaveLength(0);
+    });
+
+    it('should only remove the specified friend', () => {
+      const { addFriend, removeFriend } = useFriendsStore.getState();
+
+      addFriend({ name: 'Keep Me', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+      addFriend({ name: 'Remove Me', photoUrl: null, birthday: '1991-02-02', frequencyDays: 14, lastContactAt: '2024-01-02' });
+
+      const { friends: friendsAfterAdd } = useFriendsStore.getState();
+      const friendToRemove = friendsAfterAdd.find(f => f.name === 'Remove Me')!;
+
+      removeFriend(friendToRemove.id);
+
+      const { friends: friendsAfterRemove } = useFriendsStore.getState();
+      expect(friendsAfterRemove).toHaveLength(1);
+      expect(friendsAfterRemove[0].name).toBe('Keep Me');
+    });
+  });
+
+  describe('hasFriend', () => {
+    it('should return true if friend with name exists', () => {
+      const { addFriend, hasFriend } = useFriendsStore.getState();
+
+      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+
+      expect(hasFriend('John Doe')).toBe(true);
+    });
+
+    it('should return false if friend with name does not exist', () => {
+      const { hasFriend } = useFriendsStore.getState();
+
+      expect(hasFriend('Unknown Person')).toBe(false);
+    });
+
+    it('should be case-insensitive', () => {
+      const { addFriend, hasFriend } = useFriendsStore.getState();
+
+      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+
+      expect(hasFriend('john doe')).toBe(true);
+      expect(hasFriend('JOHN DOE')).toBe(true);
+    });
+  });
+
+  describe('getFriendById', () => {
+    it('should return the friend with matching id', () => {
+      const { addFriend, getFriendById } = useFriendsStore.getState();
+
+      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+
+      const { friends } = useFriendsStore.getState();
+      const friend = getFriendById(friends[0].id);
+
+      expect(friend).toBeTruthy();
+      expect(friend?.name).toBe('John Doe');
+    });
+
+    it('should return undefined for non-existent id', () => {
+      const { getFriendById } = useFriendsStore.getState();
+
+      const friend = getFriendById('non-existent-id');
+      expect(friend).toBeUndefined();
+    });
+  });
+});

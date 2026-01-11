@@ -1,31 +1,35 @@
 import React from "react";
 import { render, fireEvent } from "@testing-library/react-native";
-import { Alert } from "react-native";
 import { EmptyFriendsScreen } from "./EmptyFriendsScreen";
 
-// Mock Alert
-jest.spyOn(Alert, "alert");
-
 describe("EmptyFriendsScreen", () => {
+  const mockOnAddFriend = jest.fn();
+
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe("rendering", () => {
     it("should render the app title", () => {
-      const { getByText } = render(<EmptyFriendsScreen />);
+      const { getByText } = render(
+        <EmptyFriendsScreen onAddFriend={mockOnAddFriend} />
+      );
 
       expect(getByText("Pia")).toBeTruthy();
     });
 
     it("should render the hero title", () => {
-      const { getByText } = render(<EmptyFriendsScreen />);
+      const { getByText } = render(
+        <EmptyFriendsScreen onAddFriend={mockOnAddFriend} />
+      );
 
       expect(getByText("Keep your closest within reach")).toBeTruthy();
     });
 
     it("should render the hero subtitle", () => {
-      const { getByText } = render(<EmptyFriendsScreen />);
+      const { getByText } = render(
+        <EmptyFriendsScreen onAddFriend={mockOnAddFriend} />
+      );
 
       expect(
         getByText(
@@ -35,45 +39,49 @@ describe("EmptyFriendsScreen", () => {
     });
 
     it("should render the add friend CTA button", () => {
-      const { getByText } = render(<EmptyFriendsScreen />);
+      const { getByText } = render(
+        <EmptyFriendsScreen onAddFriend={mockOnAddFriend} />
+      );
 
       expect(getByText("Add a friend")).toBeTruthy();
     });
 
     it("should render the plus icon button", () => {
-      const { getByTestId } = render(<EmptyFriendsScreen />);
+      const { getByTestId } = render(
+        <EmptyFriendsScreen onAddFriend={mockOnAddFriend} />
+      );
 
       expect(getByTestId("add-friend-button")).toBeTruthy();
     });
 
     it("should render the plus SF Symbol", () => {
-      const { getByTestId } = render(<EmptyFriendsScreen />);
+      const { getByTestId } = render(
+        <EmptyFriendsScreen onAddFriend={mockOnAddFriend} />
+      );
 
       expect(getByTestId("symbol-plus")).toBeTruthy();
     });
   });
 
   describe("interactions", () => {
-    it("should show alert when plus button is pressed", () => {
-      const { getByTestId } = render(<EmptyFriendsScreen />);
+    it("should call onAddFriend when plus button is pressed", () => {
+      const { getByTestId } = render(
+        <EmptyFriendsScreen onAddFriend={mockOnAddFriend} />
+      );
 
       fireEvent.press(getByTestId("add-friend-button"));
 
-      expect(Alert.alert).toHaveBeenCalledWith(
-        "Coming Soon",
-        "Add friend feature will be available soon!"
-      );
+      expect(mockOnAddFriend).toHaveBeenCalledTimes(1);
     });
 
-    it("should show alert when add friend CTA is pressed", () => {
-      const { getByTestId } = render(<EmptyFriendsScreen />);
+    it("should call onAddFriend when add friend CTA is pressed", () => {
+      const { getByTestId } = render(
+        <EmptyFriendsScreen onAddFriend={mockOnAddFriend} />
+      );
 
       fireEvent.press(getByTestId("add-friend-cta"));
 
-      expect(Alert.alert).toHaveBeenCalledWith(
-        "Coming Soon",
-        "Add friend feature will be available soon!"
-      );
+      expect(mockOnAddFriend).toHaveBeenCalledTimes(1);
     });
   });
 });
