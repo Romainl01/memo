@@ -2,29 +2,12 @@ import { useMemo } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { FriendCard } from './FriendCard';
 import { useFriendsStore, Friend } from '@/src/stores/friendsStore';
+import { getDaysRemaining } from '@/src/utils';
 import { colors } from '@/src/constants/colors';
 import { typography } from '@/src/constants/typography';
 
 interface FriendsListProps {
   onFriendPress?: (friend: Friend) => void;
-}
-
-/**
- * Calculate days remaining until next check-in.
- * Negative values mean overdue.
- */
-function getDaysRemaining(friend: Friend): number {
-  const lastContact = new Date(friend.lastContactAt);
-  const today = new Date();
-
-  lastContact.setHours(0, 0, 0, 0);
-  today.setHours(0, 0, 0, 0);
-
-  const daysSinceContact = Math.floor(
-    (today.getTime() - lastContact.getTime()) / (1000 * 60 * 60 * 24)
-  );
-
-  return friend.frequencyDays - daysSinceContact;
 }
 
 function Separator(): React.ReactElement {
@@ -36,7 +19,10 @@ function FriendsList({ onFriendPress }: FriendsListProps): React.ReactElement {
 
   // Sort friends by urgency (most urgent/overdue first)
   const sortedFriends = useMemo(() => {
-    return [...friends].sort((a, b) => getDaysRemaining(a) - getDaysRemaining(b));
+    return [...friends].sort((a, b) =>
+      getDaysRemaining(a.lastContactAt, a.frequencyDays) -
+      getDaysRemaining(b.lastContactAt, b.frequencyDays)
+    );
   }, [friends]);
 
   if (friends.length === 0) {

@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Avatar } from '@/src/components/Avatar';
 import { Friend } from '@/src/stores/friendsStore';
+import { getDaysRemaining } from '@/src/utils';
 import { colors } from '@/src/constants/colors';
 import { typography } from '@/src/constants/typography';
 
@@ -10,24 +11,6 @@ interface FriendCardProps {
 }
 
 type CheckInStatus = 'on-track' | 'due-soon' | 'due-today' | 'overdue';
-
-/**
- * Calculates days remaining until next check-in.
- * Negative values mean overdue.
- */
-function getDaysRemaining(lastContactAt: string, frequencyDays: number): number {
-  const lastContact = new Date(lastContactAt);
-  const today = new Date();
-
-  lastContact.setHours(0, 0, 0, 0);
-  today.setHours(0, 0, 0, 0);
-
-  const daysSinceContact = Math.floor(
-    (today.getTime() - lastContact.getTime()) / (1000 * 60 * 60 * 24)
-  );
-
-  return frequencyDays - daysSinceContact;
-}
 
 function getCheckInStatus(daysRemaining: number): CheckInStatus {
   if (daysRemaining < 0) return 'overdue';

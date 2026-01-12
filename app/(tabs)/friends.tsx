@@ -2,7 +2,6 @@ import { useState, useCallback } from "react";
 import { View, Text, StyleSheet, Alert } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
   EmptyFriendsScreen,
   AddFriendSheet,
@@ -67,22 +66,21 @@ export default function FriendsScreen() {
   // Show empty state
   if (!hasFriends) {
     return (
-      <GestureHandlerRootView style={styles.root}>
+      <View style={styles.root}>
         <EmptyFriendsScreen onAddFriend={handleAddFriend} />
         <AddFriendSheet
           isOpen={isSheetOpen}
           onClose={handleCloseSheet}
           selectedContact={selectedContact}
         />
-      </GestureHandlerRootView>
+      </View>
     );
   }
 
   // Show friends list
   return (
-    <GestureHandlerRootView style={styles.root}>
+    <View style={styles.root}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Pia</Text>
           <GlassButton
@@ -100,7 +98,6 @@ export default function FriendsScreen() {
           />
         </View>
 
-        {/* Friends List */}
         <FriendsList />
       </View>
 
@@ -109,7 +106,7 @@ export default function FriendsScreen() {
         onClose={handleCloseSheet}
         selectedContact={selectedContact}
       />
-    </GestureHandlerRootView>
+    </View>
   );
 }
 

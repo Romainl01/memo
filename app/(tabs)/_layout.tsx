@@ -1,24 +1,16 @@
-import { DynamicColorIOS } from "react-native";
 import { NativeTabs, Icon, Label } from "expo-router/unstable-native-tabs";
+import { colors } from "@/src/constants/colors";
 
-// Set initial route for this tab group
 export const unstable_settings = {
   initialRouteName: "friends",
 };
 
 /**
- * Native tab navigator with iOS 26+ Liquid Glass effect.
- * Uses UITabBarController on iOS for true native behavior.
- * Routes: index (Journal), friends, settings
+ * Native tab navigator using iOS Liquid Glass effect.
  */
 export default function TabLayout() {
   return (
-    <NativeTabs
-      tintColor={DynamicColorIOS({ dark: "white", light: "black" })}
-      labelStyle={{
-        color: DynamicColorIOS({ dark: "white", light: "black" }),
-      }}
-    >
+    <NativeTabs tintColor={colors.primary}>
       <NativeTabs.Trigger name="index">
         <Icon sf={{ default: "book", selected: "book.fill" }} />
         <Label>Journal</Label>
