@@ -384,7 +384,9 @@ export default function AddFriendScreen(): React.ReactElement {
 
 const styles = StyleSheet.create({
   container: {
-    // Corner radius and margin are applied dynamically to match device
+    // Background needed for border radius to be visible
+    // Glass shows through the margins around this card
+    backgroundColor: colors.surfaceLight,
     borderCurve: 'continuous',
     overflow: 'hidden',
   },
