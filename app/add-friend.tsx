@@ -320,7 +320,11 @@ export default function AddFriendScreen(): React.ReactElement {
 
 const styles = StyleSheet.create({
   container: {
-    // Transparent background allows iOS 26 liquid glass effect
+    // Match iPhone screen corner radius for cohesive look
+    borderBottomLeftRadius: 44,
+    borderBottomRightRadius: 44,
+    borderCurve: 'continuous',
+    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
