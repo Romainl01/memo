@@ -321,6 +321,8 @@ export default function AddFriendScreen(): React.ReactElement {
 const styles = StyleSheet.create({
   container: {
     // Match iPhone screen corner radius for cohesive look
+    // Margin creates consistent spacing from device edges
+    marginHorizontal: 8,
     borderBottomLeftRadius: 44,
     borderBottomRightRadius: 44,
     borderCurve: 'continuous',
@@ -363,6 +365,7 @@ const styles = StyleSheet.create({
   },
   settingsSection: {
     paddingHorizontal: 16,
+    paddingBottom: 16,
     gap: 16,
   },
   emptyText: {
