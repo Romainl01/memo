@@ -116,6 +116,7 @@ describe('useContacts', () => {
         id: 'contact-123',
         name: 'John Doe',
         imageUri: 'file://contact-photo.jpg',
+        birthday: null,
       });
     });
 
@@ -208,6 +209,86 @@ describe('useContacts', () => {
         id: 'contact-456',
         name: 'Jane Smith',
         imageUri: null,
+        birthday: null,
+      });
+    });
+
+    it('should extract birthday from contact when available', async () => {
+      const contactWithBirthday = {
+        id: 'contact-789',
+        name: 'Bob Wilson',
+        imageAvailable: false,
+        birthday: {
+          day: 15,
+          month: 9, // October (0-indexed)
+          year: 1990,
+        },
+      };
+
+      (Contacts.getPermissionsAsync as jest.Mock).mockResolvedValue({
+        status: 'granted',
+      });
+      (Contacts.presentContactPickerAsync as jest.Mock).mockResolvedValue(contactWithBirthday);
+
+      const { result } = renderHook(() => useContacts());
+
+      await waitFor(() => {
+        expect(result.current.permissionStatus).toBe('granted');
+      });
+
+      let selectedContact;
+      await act(async () => {
+        selectedContact = await result.current.pickContact();
+      });
+
+      expect(selectedContact).toEqual({
+        id: 'contact-789',
+        name: 'Bob Wilson',
+        imageUri: null,
+        birthday: {
+          day: 15,
+          month: 9,
+          year: 1990,
+        },
+      });
+    });
+
+    it('should handle birthday without year', async () => {
+      const contactWithBirthdayNoYear = {
+        id: 'contact-101',
+        name: 'Alice Brown',
+        imageAvailable: false,
+        birthday: {
+          day: 25,
+          month: 11, // December (0-indexed)
+        },
+      };
+
+      (Contacts.getPermissionsAsync as jest.Mock).mockResolvedValue({
+        status: 'granted',
+      });
+      (Contacts.presentContactPickerAsync as jest.Mock).mockResolvedValue(contactWithBirthdayNoYear);
+
+      const { result } = renderHook(() => useContacts());
+
+      await waitFor(() => {
+        expect(result.current.permissionStatus).toBe('granted');
+      });
+
+      let selectedContact;
+      await act(async () => {
+        selectedContact = await result.current.pickContact();
+      });
+
+      expect(selectedContact).toEqual({
+        id: 'contact-101',
+        name: 'Alice Brown',
+        imageUri: null,
+        birthday: {
+          day: 25,
+          month: 11,
+          year: undefined,
+        },
       });
     });
 

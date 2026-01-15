@@ -55,6 +55,7 @@ describe('AddFriendSheet', () => {
     id: 'contact-123',
     name: 'John Doe',
     imageUri: 'https://example.com/photo.jpg',
+    birthday: null,
   };
 
   beforeEach(() => {

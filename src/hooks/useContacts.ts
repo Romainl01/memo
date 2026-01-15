@@ -3,10 +3,17 @@ import * as Contacts from 'expo-contacts';
 
 export type PermissionStatus = 'undetermined' | 'granted' | 'denied';
 
+export interface ContactBirthday {
+  day: number;
+  month: number; // 0-indexed (January = 0)
+  year?: number; // Optional - contact may not have year set
+}
+
 export interface SelectedContact {
   id: string;
   name: string;
   imageUri: string | null;
+  birthday: ContactBirthday | null;
 }
 
 interface UseContactsReturn {
@@ -53,10 +60,21 @@ export function useContacts(): UseContactsReturn {
 
       if (!contact) return null;
 
+      // Extract birthday if available
+      let birthday: ContactBirthday | null = null;
+      if (contact.birthday) {
+        birthday = {
+          day: contact.birthday.day,
+          month: contact.birthday.month,
+          year: contact.birthday.year ?? undefined,
+        };
+      }
+
       return {
         id: contact.id,
         name: contact.name || `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Unknown',
         imageUri: contact.imageAvailable && contact.image?.uri ? contact.image.uri : null,
+        birthday,
       };
     } catch {
       return null;

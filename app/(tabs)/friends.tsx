@@ -1,31 +1,25 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { View, Text, StyleSheet, Alert } from "react-native";
+import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
-import {
-  EmptyFriendsScreen,
-  AddFriendSheet,
-  FriendsList,
-} from "@/src/features/friends";
+import { EmptyFriendsScreen, FriendsList } from "@/src/features/friends";
 import { GlassButton } from "@/src/components/GlassButton";
-import { useContacts, SelectedContact } from "@/src/hooks/useContacts";
+import { useContacts } from "@/src/hooks/useContacts";
 import { useFriendsStore } from "@/src/stores/friendsStore";
 import { colors } from "@/src/constants/colors";
 import { typography } from "@/src/constants/typography";
 
 /**
  * Friends tab - shows list of friends or empty state
- * Handles the add friend flow: native contact picker → form sheet
+ * Handles the add friend flow: native contact picker → modal sheet
  */
 export default function FriendsScreen() {
   const insets = useSafeAreaInsets();
   const friends = useFriendsStore((state) => state.friends);
   const hasFriend = useFriendsStore((state) => state.hasFriend);
+  const setPendingContact = useFriendsStore((state) => state.setPendingContact);
   const { pickContact, isPicking, permissionStatus } = useContacts();
-
-  // Sheet state
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [selectedContact, setSelectedContact] = useState<SelectedContact | null>(null);
 
   const handleAddFriend = useCallback(async () => {
     if (isPicking) return;
@@ -52,14 +46,10 @@ export default function FriendsScreen() {
       return;
     }
 
-    setSelectedContact(contact);
-    setIsSheetOpen(true);
-  }, [pickContact, isPicking, permissionStatus, hasFriend]);
-
-  const handleCloseSheet = useCallback(() => {
-    setIsSheetOpen(false);
-    setSelectedContact(null);
-  }, []);
+    // Set pending contact in store and navigate to modal
+    setPendingContact(contact);
+    router.push("/add-friend");
+  }, [pickContact, isPicking, permissionStatus, hasFriend, setPendingContact]);
 
   const hasFriends = friends.length > 0;
 
@@ -68,11 +58,6 @@ export default function FriendsScreen() {
     return (
       <View style={styles.root}>
         <EmptyFriendsScreen onAddFriend={handleAddFriend} />
-        <AddFriendSheet
-          isOpen={isSheetOpen}
-          onClose={handleCloseSheet}
-          selectedContact={selectedContact}
-        />
       </View>
     );
   }
@@ -100,12 +85,6 @@ export default function FriendsScreen() {
 
         <FriendsList />
       </View>
-
-      <AddFriendSheet
-        isOpen={isSheetOpen}
-        onClose={handleCloseSheet}
-        selectedContact={selectedContact}
-      />
     </View>
   );
 }

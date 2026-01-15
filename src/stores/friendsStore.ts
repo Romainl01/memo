@@ -1,10 +1,11 @@
 import { create } from 'zustand';
+import type { SelectedContact } from '@/src/hooks/useContacts';
 
 export interface Friend {
   id: string;
   name: string;
   photoUrl: string | null;
-  birthday: string; // ISO date string (YYYY-MM-DD)
+  birthday: string; // ISO date string (YYYY-MM-DD) or MM-DD if no year
   frequencyDays: number;
   lastContactAt: string; // ISO date string (YYYY-MM-DD)
   createdAt: string; // ISO timestamp
@@ -14,10 +15,12 @@ export type NewFriend = Omit<Friend, 'id' | 'createdAt'>;
 
 interface FriendsState {
   friends: Friend[];
+  pendingContact: SelectedContact | null;
   addFriend: (friend: NewFriend) => void;
   removeFriend: (id: string) => void;
   hasFriend: (name: string) => boolean;
   getFriendById: (id: string) => Friend | undefined;
+  setPendingContact: (contact: SelectedContact | null) => void;
 }
 
 /**
@@ -30,6 +33,11 @@ function generateId(): string {
 
 export const useFriendsStore = create<FriendsState>((set, get) => ({
   friends: [],
+  pendingContact: null,
+
+  setPendingContact: (contact: SelectedContact | null) => {
+    set({ pendingContact: contact });
+  },
 
   addFriend: (newFriend: NewFriend) => {
     const friend: Friend = {
