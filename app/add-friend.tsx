@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable, Platform, ActionSheetIOS } from 'react-native';
+import { View, Text, StyleSheet, Pressable, useWindowDimensions } from 'react-native';
+import * as DropdownMenu from 'zeego/dropdown-menu';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassView } from 'expo-glass-effect';
@@ -16,6 +17,24 @@ import { typography } from '@/src/constants/typography';
 import type { ContactBirthday } from '@/src/hooks/useContacts';
 
 type FrequencyOption = 7 | 14 | 30 | 90 | null;
+
+// Sheet layout constants
+const SHEET_MARGIN = 8;
+
+/**
+ * Estimates iPhone screen corner radius based on screen dimensions.
+ * Modern iPhones (12+) have ~47px corners, Pro models ~55px.
+ */
+function getDeviceCornerRadius(screenWidth: number, screenHeight: number): number {
+  const screenSize = Math.max(screenWidth, screenHeight);
+
+  // Pro Max / Plus models (larger screens)
+  if (screenSize >= 926) return 55;
+  // Pro / Standard models
+  if (screenSize >= 844) return 47;
+  // Smaller models (mini, SE)
+  return 44;
+}
 
 const FREQUENCY_LABELS: Record<number, string> = {
   7: 'Weekly',
@@ -85,6 +104,12 @@ function birthdayToDate(birthday: ContactBirthday): Date {
 
 export default function AddFriendScreen(): React.ReactElement {
   const insets = useSafeAreaInsets();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+
+  // Calculate corner radius to maintain consistent margin from device edges
+  const deviceCornerRadius = getDeviceCornerRadius(screenWidth, screenHeight);
+  const sheetCornerRadius = deviceCornerRadius - SHEET_MARGIN;
+
   const pendingContact = useFriendsStore((state) => state.pendingContact);
   const setPendingContact = useFriendsStore((state) => state.setPendingContact);
   const addFriend = useFriendsStore((state) => state.addFriend);
@@ -181,39 +206,18 @@ export default function AddFriendScreen(): React.ReactElement {
     setShowLastCatchUpPicker(false);
   }, []);
 
-  const handleFrequencyPress = useCallback(() => {
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        {
-          options: ['Cancel', 'Weekly', 'Bi-weekly', 'Monthly', 'Quarterly', 'None'],
-          cancelButtonIndex: 0,
-        },
-        (buttonIndex) => {
-          switch (buttonIndex) {
-            case 1:
-              setFrequency(7);
-              break;
-            case 2:
-              setFrequency(14);
-              break;
-            case 3:
-              setFrequency(30);
-              break;
-            case 4:
-              setFrequency(90);
-              break;
-            case 5:
-              setFrequency(null);
-              break;
-          }
-        }
-      );
-    }
-  }, []);
-
   if (!pendingContact) {
     return (
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          {
+            margin: SHEET_MARGIN,
+            borderBottomLeftRadius: sheetCornerRadius,
+            borderBottomRightRadius: sheetCornerRadius,
+          },
+        ]}
+      >
         <Text style={styles.emptyText}>No contact selected</Text>
       </View>
     );
@@ -224,7 +228,17 @@ export default function AddFriendScreen(): React.ReactElement {
   const frequencyDisplayValue = frequency ? FREQUENCY_LABELS[frequency] : 'None';
 
   return (
-    <View style={[styles.container, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          margin: SHEET_MARGIN,
+          borderBottomLeftRadius: sheetCornerRadius,
+          borderBottomRightRadius: sheetCornerRadius,
+          paddingBottom: Math.max(insets.bottom, 16),
+        },
+      ]}
+    >
       {/* Header with close and save buttons */}
       <View style={styles.header}>
         <View style={styles.headerSpacer} />
@@ -278,14 +292,64 @@ export default function AddFriendScreen(): React.ReactElement {
           testID="last-catchup-row"
         />
 
-        <SettingsRow
-          icon="arrow.trianglehead.2.clockwise"
-          label="Frequency"
-          value={frequencyDisplayValue}
-          onPress={handleFrequencyPress}
-          chevronType="dropdown"
-          testID="frequency-row"
-        />
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            <SettingsRow
+              icon="arrow.trianglehead.2.clockwise"
+              label="Frequency"
+              value={frequencyDisplayValue}
+              chevronType="dropdown"
+              testID="frequency-row"
+            />
+          </DropdownMenu.Trigger>
+
+          <DropdownMenu.Content>
+            <DropdownMenu.CheckboxItem
+              key="weekly"
+              value={frequency === 7 ? 'on' : 'off'}
+              onValueChange={() => setFrequency(7)}
+            >
+              <DropdownMenu.ItemIndicator />
+              <DropdownMenu.ItemTitle>Weekly</DropdownMenu.ItemTitle>
+            </DropdownMenu.CheckboxItem>
+
+            <DropdownMenu.CheckboxItem
+              key="biweekly"
+              value={frequency === 14 ? 'on' : 'off'}
+              onValueChange={() => setFrequency(14)}
+            >
+              <DropdownMenu.ItemIndicator />
+              <DropdownMenu.ItemTitle>Bi-weekly</DropdownMenu.ItemTitle>
+            </DropdownMenu.CheckboxItem>
+
+            <DropdownMenu.CheckboxItem
+              key="monthly"
+              value={frequency === 30 ? 'on' : 'off'}
+              onValueChange={() => setFrequency(30)}
+            >
+              <DropdownMenu.ItemIndicator />
+              <DropdownMenu.ItemTitle>Monthly</DropdownMenu.ItemTitle>
+            </DropdownMenu.CheckboxItem>
+
+            <DropdownMenu.CheckboxItem
+              key="quarterly"
+              value={frequency === 90 ? 'on' : 'off'}
+              onValueChange={() => setFrequency(90)}
+            >
+              <DropdownMenu.ItemIndicator />
+              <DropdownMenu.ItemTitle>Quarterly</DropdownMenu.ItemTitle>
+            </DropdownMenu.CheckboxItem>
+
+            <DropdownMenu.CheckboxItem
+              key="none"
+              value={frequency === null ? 'on' : 'off'}
+              onValueChange={() => setFrequency(null)}
+            >
+              <DropdownMenu.ItemIndicator />
+              <DropdownMenu.ItemTitle>None</DropdownMenu.ItemTitle>
+            </DropdownMenu.CheckboxItem>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
       </View>
 
       {/* Date picker modals - inline calendar display */}
@@ -320,11 +384,7 @@ export default function AddFriendScreen(): React.ReactElement {
 
 const styles = StyleSheet.create({
   container: {
-    // Match iPhone screen corner radius for cohesive look
-    // Margin creates consistent spacing from device edges
-    marginHorizontal: 8,
-    borderBottomLeftRadius: 44,
-    borderBottomRightRadius: 44,
+    // Corner radius and margin are applied dynamically to match device
     borderCurve: 'continuous',
     overflow: 'hidden',
   },

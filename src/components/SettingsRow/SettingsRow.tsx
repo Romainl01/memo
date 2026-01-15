@@ -7,7 +7,7 @@ interface SettingsRowProps {
   icon: string;
   label: string;
   value: string;
-  onPress: () => void;
+  onPress?: () => void;
   chevronType?: 'expand' | 'dropdown';
   testID?: string;
 }
@@ -26,7 +26,7 @@ function SettingsRow({
 }: SettingsRowProps): React.ReactElement {
   const handlePress = () => {
     Haptics.selectionAsync();
-    onPress();
+    onPress?.();
   };
 
   const chevronIcon = chevronType === 'dropdown' ? 'chevron.up.chevron.down' : 'plus';
