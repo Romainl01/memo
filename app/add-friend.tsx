@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useRef } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,7 +8,7 @@ import * as Haptics from 'expo-haptics';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { Avatar } from '@/src/components/Avatar';
 import { SettingsRow } from '@/src/components/SettingsRow';
-import { GlassMenu, type AnchorPosition } from '@/src/components/GlassMenu';
+import { GlassMenu } from '@/src/components/GlassMenu';
 import { useFriendsStore } from '@/src/stores/friendsStore';
 import { useNotificationStateStore } from '@/src/stores/notificationStateStore';
 import { colors } from '@/src/constants/colors';
@@ -119,9 +119,7 @@ export default function AddFriendScreen(): React.ReactElement {
   const [showLastCatchUpPicker, setShowLastCatchUpPicker] = useState(false);
 
   // Frequency menu state
-  const frequencyRowRef = useRef<View>(null);
   const [showFrequencyMenu, setShowFrequencyMenu] = useState(false);
-  const [frequencyMenuAnchor, setFrequencyMenuAnchor] = useState<AnchorPosition | null>(null);
 
   // Pre-fill birthday from contact if available
   useEffect(() => {
@@ -198,10 +196,7 @@ export default function AddFriendScreen(): React.ReactElement {
   }, []);
 
   const handleFrequencyPress = useCallback(() => {
-    frequencyRowRef.current?.measureInWindow((x, y, width, height) => {
-      setFrequencyMenuAnchor({ x, y, width, height });
-      setShowFrequencyMenu(true);
-    });
+    setShowFrequencyMenu(true);
   }, []);
 
   const handleFrequencySelect = useCallback((value: FrequencyOption) => {
@@ -275,15 +270,25 @@ export default function AddFriendScreen(): React.ReactElement {
           testID="last-catchup-row"
         />
 
-        <SettingsRow
-          ref={frequencyRowRef}
-          icon="arrow.trianglehead.2.clockwise"
-          label="Frequency"
-          value={frequencyDisplayValue}
-          onPress={handleFrequencyPress}
-          chevronType="dropdown"
-          testID="frequency-row"
-        />
+        {/* Frequency row with dropdown menu */}
+        <View style={styles.frequencyContainer}>
+          <SettingsRow
+            icon="arrow.trianglehead.2.clockwise"
+            label="Frequency"
+            value={frequencyDisplayValue}
+            onPress={handleFrequencyPress}
+            chevronType="dropdown"
+            testID="frequency-row"
+          />
+          <GlassMenu
+            visible={showFrequencyMenu}
+            onClose={() => setShowFrequencyMenu(false)}
+            items={FREQUENCY_MENU_ITEMS}
+            selectedValue={frequency}
+            onSelect={handleFrequencySelect}
+            testID="frequency-menu"
+          />
+        </View>
       </View>
 
       {/* Date picker modals - inline calendar display */}
@@ -312,17 +317,6 @@ export default function AddFriendScreen(): React.ReactElement {
           onCancel={handleLastCatchUpCancel}
         />
       )}
-
-      {/* Frequency selection menu */}
-      <GlassMenu
-        visible={showFrequencyMenu}
-        onClose={() => setShowFrequencyMenu(false)}
-        items={FREQUENCY_MENU_ITEMS}
-        selectedValue={frequency}
-        onSelect={handleFrequencySelect}
-        anchorPosition={frequencyMenuAnchor}
-        testID="frequency-menu"
-      />
     </View>
   );
 }
@@ -366,6 +360,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
     gap: 16,
+  },
+  frequencyContainer: {
+    position: 'relative',
+    zIndex: 100,
   },
   emptyText: {
     ...typography.body1,

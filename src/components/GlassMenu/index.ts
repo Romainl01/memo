@@ -1,2 +1,2 @@
 export { GlassMenu } from './GlassMenu';
-export type { AnchorPosition, GlassMenuItem } from './GlassMenu';
+export type { GlassMenuItem } from './GlassMenu';

@@ -1,28 +1,16 @@
 import { useEffect, useRef, useCallback } from 'react';
 import {
-  Modal,
   View,
   Text,
   Pressable,
   StyleSheet,
   Animated,
-  Dimensions,
   Platform,
 } from 'react-native';
 import { GlassView } from 'expo-glass-effect';
 import { SymbolView } from 'expo-symbols';
 import * as Haptics from 'expo-haptics';
 import { colors } from '@/src/constants/colors';
-
-/**
- * Position of the anchor element (trigger) measured with measureInWindow()
- */
-export interface AnchorPosition {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
 
 /**
  * A menu item with a label and value
@@ -43,8 +31,6 @@ interface GlassMenuProps<T> {
   selectedValue?: T;
   /** Callback when an item is selected */
   onSelect: (value: T) => void;
-  /** Position of the anchor element */
-  anchorPosition: AnchorPosition | null;
   /** Test ID for the menu container */
   testID?: string;
 }
@@ -52,36 +38,12 @@ interface GlassMenuProps<T> {
 const MENU_BORDER_RADIUS = 16;
 const ITEM_HEIGHT = 48;
 const MENU_PADDING_VERTICAL = 6;
-const SCREEN_EDGE_PADDING = 16;
 const MENU_WIDTH = 160;
 
 /**
  * A dropdown menu with iOS glass effect background.
- * Positions itself relative to an anchor element and animates in/out.
- *
- * @example
- * ```tsx
- * const triggerRef = useRef<View>(null);
- * const [menuVisible, setMenuVisible] = useState(false);
- * const [anchorPosition, setAnchorPosition] = useState<AnchorPosition | null>(null);
- *
- * const openMenu = () => {
- *   triggerRef.current?.measureInWindow((x, y, width, height) => {
- *     setAnchorPosition({ x, y, width, height });
- *     setMenuVisible(true);
- *   });
- * };
- *
- * <Pressable ref={triggerRef} onPress={openMenu}>...</Pressable>
- * <GlassMenu
- *   visible={menuVisible}
- *   onClose={() => setMenuVisible(false)}
- *   items={[{ label: 'Option 1', value: 1 }]}
- *   selectedValue={selectedValue}
- *   onSelect={setSelectedValue}
- *   anchorPosition={anchorPosition}
- * />
- * ```
+ * Renders as an overlay within its parent container.
+ * Position the menu using the `style` prop on the container or by placing it appropriately in the layout.
  */
 export function GlassMenu<T>({
   visible,
@@ -89,7 +51,6 @@ export function GlassMenu<T>({
   items,
   selectedValue,
   onSelect,
-  anchorPosition,
   testID,
 }: GlassMenuProps<T>): React.ReactElement | null {
   const scaleAnim = useRef(new Animated.Value(0.97)).current;
@@ -145,116 +106,98 @@ export function GlassMenu<T>({
     [onSelect, handleClose]
   );
 
-  if (!visible || !anchorPosition) {
+  if (!visible) {
     return null;
   }
 
-  const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-  const menuHeight = items.length * ITEM_HEIGHT + MENU_PADDING_VERTICAL * 2;
-
-  // Calculate available space above and below the anchor
-  const spaceBelow = screenHeight - (anchorPosition.y + anchorPosition.height);
-  const spaceAbove = anchorPosition.y;
-  const showAbove = spaceBelow < menuHeight + SCREEN_EDGE_PADDING && spaceAbove > spaceBelow;
-
-  // Position menu ABOVE the anchor, with bottom of menu near top of anchor
-  const menuTop = anchorPosition.y - menuHeight - 4;
-
-  // Fixed width menu, aligned to right edge of anchor
-  const anchorRight = anchorPosition.x + anchorPosition.width;
-  const menuLeft = Math.max(
-    SCREEN_EDGE_PADDING,
-    anchorRight - MENU_WIDTH
-  );
-
-  // Unused but kept for potential future use
-  void showAbove;
-
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="none"
-      onRequestClose={handleClose}
-      statusBarTranslucent
-    >
-      {/* Backdrop */}
-      <Pressable style={styles.backdrop} onPress={handleClose}>
-        <Animated.View
-          style={[
-            styles.menuWrapper,
-            {
-              top: menuTop,
-              left: menuLeft,
-              width: MENU_WIDTH,
-              opacity: opacityAnim,
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-          testID={testID}
-        >
-          {/* Prevent press events from bubbling to backdrop */}
-          <Pressable>
-            <GlassView style={styles.menuContainer} glassEffectStyle="regular">
-              {/* Fallback background for non-iOS 26 */}
-              <View style={styles.fallbackBackground} />
+    <>
+      {/* Backdrop - covers parent container to catch outside taps */}
+      <Pressable style={styles.backdrop} onPress={handleClose} />
 
-              {items.map((item, index) => {
-                const isSelected = selectedValue === item.value;
-                const isLast = index === items.length - 1;
+      {/* Menu - positioned absolutely from bottom-right */}
+      <Animated.View
+        style={[
+          styles.menuWrapper,
+          {
+            opacity: opacityAnim,
+            transform: [{ scale: scaleAnim }],
+          },
+        ]}
+        testID={testID}
+      >
+        <Pressable>
+          <GlassView
+            style={styles.menuContainer}
+            tintColor="rgba(120, 120, 128, 0.2)"
+          >
+            {items.map((item, index) => {
+              const isSelected = selectedValue === item.value;
+              const isLast = index === items.length - 1;
 
-                return (
-                  <Pressable
-                    key={String(item.value)}
-                    style={({ pressed }) => [
-                      styles.menuItem,
-                      !isLast && styles.menuItemWithBorder,
-                      pressed && styles.menuItemPressed,
+              return (
+                <Pressable
+                  key={String(item.value)}
+                  style={({ pressed }) => [
+                    styles.menuItem,
+                    !isLast && styles.menuItemWithBorder,
+                    pressed && styles.menuItemPressed,
+                  ]}
+                  onPress={() => handleSelect(item.value)}
+                  testID={`${testID}-item-${item.value}`}
+                >
+                  <Text
+                    style={[
+                      styles.menuItemText,
+                      isSelected && styles.menuItemTextSelected,
                     ]}
-                    onPress={() => handleSelect(item.value)}
-                    testID={`${testID}-item-${item.value}`}
                   >
-                    <Text
-                      style={[
-                        styles.menuItemText,
-                        isSelected && styles.menuItemTextSelected,
-                      ]}
-                    >
-                      {item.label}
-                    </Text>
-                    {isSelected && (
-                      <SymbolView
-                        name="checkmark"
-                        size={18}
-                        weight="semibold"
-                        tintColor={colors.primary}
-                      />
-                    )}
-                  </Pressable>
-                );
-              })}
-            </GlassView>
-          </Pressable>
-        </Animated.View>
-      </Pressable>
-    </Modal>
+                    {item.label}
+                  </Text>
+                  {isSelected && (
+                    <SymbolView
+                      name="checkmark"
+                      size={18}
+                      weight="semibold"
+                      tintColor={colors.primary}
+                    />
+                  )}
+                </Pressable>
+              );
+            })}
+          </GlassView>
+        </Pressable>
+      </Animated.View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   backdrop: {
-    flex: 1,
+    position: 'absolute',
+    // Extend far beyond the container to cover the entire screen
+    top: -2000,
+    left: -2000,
+    right: -2000,
+    bottom: -2000,
+    zIndex: 999,
   },
   menuWrapper: {
     position: 'absolute',
-    // Scale from bottom-right since menu appears above and aligns to right
+    // Position above the row, aligned to the right
+    bottom: '100%',
+    right: 0,
+    marginBottom: 4,
+    width: MENU_WIDTH,
+    zIndex: 1000,
     transformOrigin: 'bottom right',
   },
   menuContainer: {
     borderRadius: MENU_BORDER_RADIUS,
     overflow: 'hidden',
     paddingVertical: MENU_PADDING_VERTICAL,
-    // Shadow for depth
+    // Fallback background for non-iOS 26 (GlassView renders as plain View)
+    backgroundColor: 'rgba(242, 242, 247, 0.95)',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -266,11 +209,6 @@ const styles = StyleSheet.create({
         elevation: 8,
       },
     }),
-  },
-  fallbackBackground: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 255, 255, 0.85)',
-    // Only visible on non-iOS 26 where GlassView falls back to View
   },
   menuItem: {
     flexDirection: 'row',
