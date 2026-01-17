@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { StyleSheet, useWindowDimensions } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -19,7 +19,6 @@ import { NotificationService } from '@/src/services/notificationService';
 import { useFriendsStore } from '@/src/stores/friendsStore';
 import { useNotificationStateStore } from '@/src/stores/notificationStateStore';
 import { useNotificationPermission } from '@/src/hooks/useNotificationPermission';
-import { getDeviceCornerRadius } from '@/src/utils';
 
 // Delay before requesting permission to allow sheet dismiss animation to complete
 const SHEET_DISMISS_DELAY_MS = 400;
@@ -29,9 +28,6 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout(): React.ReactElement | null {
   const router = useRouter();
   const responseListener = useRef<Notifications.Subscription>();
-  const { width, height } = useWindowDimensions();
-
-  const sheetCornerRadius = getDeviceCornerRadius(width, height);
 
   const friends = useFriendsStore((state) => state.friends);
   const {
@@ -113,7 +109,6 @@ export default function RootLayout(): React.ReactElement | null {
               presentation: 'formSheet',
               sheetAllowedDetents: 'fitToContents',
               sheetGrabberVisible: true,
-              sheetCornerRadius,
               headerShown: false,
               contentStyle: { backgroundColor: 'transparent' },
             }}

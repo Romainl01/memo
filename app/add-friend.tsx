@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GlassView } from 'expo-glass-effect';
@@ -13,7 +13,6 @@ import { useFriendsStore } from '@/src/stores/friendsStore';
 import { useNotificationStateStore } from '@/src/stores/notificationStateStore';
 import { colors } from '@/src/constants/colors';
 import { typography } from '@/src/constants/typography';
-import { getDeviceCornerRadius, getConcentricPadding } from '@/src/utils';
 import type { ContactBirthday } from '@/src/hooks/useContacts';
 
 const BUTTON_SIZE = 44;
@@ -97,12 +96,7 @@ function birthdayToDate(birthday: ContactBirthday): Date {
 
 export default function AddFriendScreen(): React.ReactElement {
   const insets = useSafeAreaInsets();
-  const { width, height } = useWindowDimensions();
   const pendingContact = useFriendsStore((state) => state.pendingContact);
-
-  // Calculate concentric padding for the save button
-  const sheetCornerRadius = getDeviceCornerRadius(width, height);
-  const buttonPadding = getConcentricPadding(sheetCornerRadius, BUTTON_RADIUS);
   const setPendingContact = useFriendsStore((state) => state.setPendingContact);
   const addFriend = useFriendsStore((state) => state.addFriend);
   const friendsCount = useFriendsStore((state) => state.friends.length);
@@ -217,8 +211,8 @@ export default function AddFriendScreen(): React.ReactElement {
 
   return (
     <View style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
-      {/* Header with save button - positioned concentrically with sheet corner */}
-      <View style={[styles.header, { paddingTop: buttonPadding, paddingRight: buttonPadding }]}>
+      {/* Header with save button */}
+      <View style={[styles.header, { paddingTop: 16, paddingRight: 16 }]}>
         <View style={styles.headerSpacer} />
         <Pressable
           onPress={handleSave}
