@@ -1,11 +1,19 @@
 import { getDaysRemaining, getRelativeLastContact } from './dateHelpers';
 
 describe('getDaysRemaining', () => {
+  // Helper to format date in local time
+  const toLocalDateString = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   it('should return positive days when check-in is in the future', () => {
     const today = new Date();
     const lastContact = new Date(today);
     lastContact.setDate(today.getDate() - 5);
-    const lastContactStr = lastContact.toISOString().split('T')[0];
+    const lastContactStr = toLocalDateString(lastContact);
 
     const result = getDaysRemaining(lastContactStr, 14);
 
@@ -16,7 +24,7 @@ describe('getDaysRemaining', () => {
     const today = new Date();
     const lastContact = new Date(today);
     lastContact.setDate(today.getDate() - 14);
-    const lastContactStr = lastContact.toISOString().split('T')[0];
+    const lastContactStr = toLocalDateString(lastContact);
 
     const result = getDaysRemaining(lastContactStr, 14);
 
@@ -27,7 +35,7 @@ describe('getDaysRemaining', () => {
     const today = new Date();
     const lastContact = new Date(today);
     lastContact.setDate(today.getDate() - 20);
-    const lastContactStr = lastContact.toISOString().split('T')[0];
+    const lastContactStr = toLocalDateString(lastContact);
 
     const result = getDaysRemaining(lastContactStr, 14);
 
@@ -36,11 +44,14 @@ describe('getDaysRemaining', () => {
 });
 
 describe('getRelativeLastContact', () => {
-  // Helper to create a date string N days ago
+  // Helper to create a date string N days ago (in local time)
   const daysAgo = (days: number): string => {
     const date = new Date();
     date.setDate(date.getDate() - days);
-    return date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   it('should return "Today" for today\'s date', () => {

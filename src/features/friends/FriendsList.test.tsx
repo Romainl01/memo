@@ -3,6 +3,14 @@ import { render } from '@testing-library/react-native';
 import { FriendsList } from './FriendsList';
 import { useFriendsStore } from '@/src/stores/friendsStore';
 
+// Helper to format date in local time (avoids UTC timezone issues)
+const toLocalDateString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 describe('FriendsList', () => {
   beforeEach(() => {
     useFriendsStore.setState({ friends: [] });
@@ -16,7 +24,7 @@ describe('FriendsList', () => {
   });
 
   describe('with friends', () => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalDateString(new Date());
 
     beforeEach(() => {
       useFriendsStore.setState({
@@ -60,7 +68,7 @@ describe('FriendsList', () => {
       const daysAgo = (days: number) => {
         const date = new Date();
         date.setDate(date.getDate() - days);
-        return date.toISOString().split('T')[0];
+        return toLocalDateString(date);
       };
 
       useFriendsStore.setState({
@@ -96,12 +104,15 @@ describe('FriendsList', () => {
       });
 
       const { getAllByRole } = render(<FriendsList />);
-      const cards = getAllByRole('button');
+      // Filter to only get card buttons (those with friend name in label)
+      const cardButtons = getAllByRole('button').filter(
+        (btn) => btn.props.accessibilityLabel && !btn.props.accessibilityLabel.includes('Mark catch up')
+      );
 
       // Should be sorted: Overdue (-3), Due Soon (2), On Track (25)
-      expect(cards[0].props.accessibilityLabel).toContain('Overdue Friend');
-      expect(cards[1].props.accessibilityLabel).toContain('Due Soon Friend');
-      expect(cards[2].props.accessibilityLabel).toContain('On Track Friend');
+      expect(cardButtons[0].props.accessibilityLabel).toContain('Overdue Friend');
+      expect(cardButtons[1].props.accessibilityLabel).toContain('Due Soon Friend');
+      expect(cardButtons[2].props.accessibilityLabel).toContain('On Track Friend');
     });
   });
 });

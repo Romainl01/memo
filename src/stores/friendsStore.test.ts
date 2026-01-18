@@ -161,4 +161,80 @@ describe('friendsStore', () => {
       expect(friend).toBeUndefined();
     });
   });
+
+  describe('logCatchUp', () => {
+    it('should update lastContactAt to today', () => {
+      const { addFriend, logCatchUp } = useFriendsStore.getState();
+
+      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+
+      const { friends: friendsBefore } = useFriendsStore.getState();
+      const friendId = friendsBefore[0].id;
+
+      logCatchUp(friendId);
+
+      const { friends: friendsAfter } = useFriendsStore.getState();
+      const today = new Date().toISOString().split('T')[0];
+      expect(friendsAfter[0].lastContactAt).toBe(today);
+    });
+
+    it('should return the previous lastContactAt value', () => {
+      const { addFriend, logCatchUp } = useFriendsStore.getState();
+
+      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+
+      const { friends } = useFriendsStore.getState();
+      const friendId = friends[0].id;
+
+      const previousDate = logCatchUp(friendId);
+
+      expect(previousDate).toBe('2024-01-01');
+    });
+
+    it('should return undefined for non-existent friend', () => {
+      const { logCatchUp } = useFriendsStore.getState();
+
+      const result = logCatchUp('non-existent-id');
+
+      expect(result).toBeUndefined();
+    });
+
+    it('should only update the specified friend', () => {
+      const { addFriend, logCatchUp } = useFriendsStore.getState();
+
+      addFriend({ name: 'Friend 1', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+      addFriend({ name: 'Friend 2', photoUrl: null, birthday: '1991-02-02', frequencyDays: 14, lastContactAt: '2024-01-02' });
+
+      const { friends: friendsBefore } = useFriendsStore.getState();
+      const friend1Id = friendsBefore[0].id;
+
+      logCatchUp(friend1Id);
+
+      const { friends: friendsAfter } = useFriendsStore.getState();
+      expect(friendsAfter[1].lastContactAt).toBe('2024-01-02'); // Unchanged
+    });
+  });
+
+  describe('undoCatchUp', () => {
+    it('should restore the previous lastContactAt value', () => {
+      const { addFriend, logCatchUp, undoCatchUp } = useFriendsStore.getState();
+
+      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+
+      const { friends } = useFriendsStore.getState();
+      const friendId = friends[0].id;
+
+      const previousDate = logCatchUp(friendId);
+      undoCatchUp(friendId, previousDate!);
+
+      const { friends: friendsAfter } = useFriendsStore.getState();
+      expect(friendsAfter[0].lastContactAt).toBe('2024-01-01');
+    });
+
+    it('should not throw for non-existent friend', () => {
+      const { undoCatchUp } = useFriendsStore.getState();
+
+      expect(() => undoCatchUp('non-existent-id', '2024-01-01')).not.toThrow();
+    });
+  });
 });

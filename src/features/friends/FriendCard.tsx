@@ -1,13 +1,15 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { SymbolView } from 'expo-symbols';
 import { Avatar } from '@/src/components/Avatar';
 import { Friend } from '@/src/stores/friendsStore';
-import { getDaysRemaining } from '@/src/utils';
+import { getDaysRemaining, getRelativeLastContact } from '@/src/utils';
 import { colors } from '@/src/constants/colors';
 import { typography } from '@/src/constants/typography';
 
 interface FriendCardProps {
   friend: Friend;
   onPress?: () => void;
+  onCatchUp?: () => void;
 }
 
 type CheckInStatus = 'on-track' | 'due-soon' | 'due-today' | 'overdue';
@@ -17,12 +19,6 @@ function getCheckInStatus(daysRemaining: number): CheckInStatus {
   if (daysRemaining === 0) return 'due-today';
   if (daysRemaining <= 3) return 'due-soon';
   return 'on-track';
-}
-
-function getStatusLabel(daysRemaining: number, status: CheckInStatus): string {
-  if (status === 'overdue') return `${Math.abs(daysRemaining)} days overdue`;
-  if (status === 'due-today') return 'Check in today';
-  return `${daysRemaining} days`;
 }
 
 function getStatusColor(status: CheckInStatus): string {
@@ -37,16 +33,16 @@ function getStatusColor(status: CheckInStatus): string {
   }
 }
 
-function FriendCard({ friend, onPress }: FriendCardProps): React.ReactElement {
+function FriendCard({ friend, onPress, onCatchUp }: FriendCardProps): React.ReactElement {
   const daysRemaining = getDaysRemaining(friend.lastContactAt, friend.frequencyDays);
   const status = getCheckInStatus(daysRemaining);
-  const statusLabel = getStatusLabel(daysRemaining, status);
   const statusColor = getStatusColor(status);
+  const relativeDate = getRelativeLastContact(friend.lastContactAt);
 
   return (
     <Pressable
       onPress={onPress}
-      accessibilityLabel={`${friend.name}, ${statusLabel}`}
+      accessibilityLabel={`${friend.name}, ${relativeDate}`}
       accessibilityRole="button"
       style={styles.shadowWrapper}
     >
@@ -62,12 +58,30 @@ function FriendCard({ friend, onPress }: FriendCardProps): React.ReactElement {
             {friend.name}
           </Text>
           <View style={styles.statusContainer}>
-            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-            <Text style={[styles.statusText, { color: statusColor }]}>
-              {statusLabel}
+            <View
+              style={[styles.statusDot, { backgroundColor: statusColor }]}
+              testID="status-dot"
+            />
+            <Text style={styles.statusText}>
+              Last seen {relativeDate.toLowerCase()}
             </Text>
           </View>
         </View>
+
+        <Pressable
+          onPress={onCatchUp}
+          testID="catchup-button"
+          accessibilityLabel={`Mark catch up with ${friend.name}`}
+          accessibilityRole="button"
+          hitSlop={8}
+          style={styles.catchUpButton}
+        >
+          <SymbolView
+            name="checkmark.circle.fill"
+            size={36}
+            tintColor={colors.primary}
+          />
+        </Pressable>
       </View>
     </Pressable>
   );
@@ -111,7 +125,11 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   statusText: {
-    fontSize: 14,
+    ...typography.body2,
+    color: colors.neutralGray,
+  },
+  catchUpButton: {
+    padding: 4,
   },
 });
 

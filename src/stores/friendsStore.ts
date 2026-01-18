@@ -21,6 +21,8 @@ interface FriendsState {
   hasFriend: (name: string) => boolean;
   getFriendById: (id: string) => Friend | undefined;
   setPendingContact: (contact: SelectedContact | null) => void;
+  logCatchUp: (friendId: string) => string | undefined;
+  undoCatchUp: (friendId: string, previousLastContactAt: string) => void;
 }
 
 /**
@@ -35,11 +37,11 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
   friends: [],
   pendingContact: null,
 
-  setPendingContact: (contact: SelectedContact | null) => {
+  setPendingContact: (contact) => {
     set({ pendingContact: contact });
   },
 
-  addFriend: (newFriend: NewFriend) => {
+  addFriend: (newFriend) => {
     const friend: Friend = {
       ...newFriend,
       id: generateId(),
@@ -51,20 +53,45 @@ export const useFriendsStore = create<FriendsState>((set, get) => ({
     }));
   },
 
-  removeFriend: (id: string) => {
+  removeFriend: (id) => {
     set((state) => ({
       friends: state.friends.filter((friend) => friend.id !== id),
     }));
   },
 
-  hasFriend: (name: string) => {
+  hasFriend: (name) => {
     const { friends } = get();
     const normalizedName = name.toLowerCase();
     return friends.some((friend) => friend.name.toLowerCase() === normalizedName);
   },
 
-  getFriendById: (id: string) => {
+  getFriendById: (id) => {
     const { friends } = get();
     return friends.find((friend) => friend.id === id);
+  },
+
+  logCatchUp: (friendId) => {
+    const { friends } = get();
+    const friend = friends.find((f) => f.id === friendId);
+    if (!friend) return undefined;
+
+    const previousDate = friend.lastContactAt;
+    const today = new Date().toISOString().split('T')[0];
+
+    set((state) => ({
+      friends: state.friends.map((f) =>
+        f.id === friendId ? { ...f, lastContactAt: today } : f
+      ),
+    }));
+
+    return previousDate;
+  },
+
+  undoCatchUp: (friendId, previousLastContactAt) => {
+    set((state) => ({
+      friends: state.friends.map((f) =>
+        f.id === friendId ? { ...f, lastContactAt: previousLastContactAt } : f
+      ),
+    }));
   },
 }));

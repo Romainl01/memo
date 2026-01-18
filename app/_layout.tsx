@@ -19,6 +19,7 @@ import { NotificationService } from '@/src/services/notificationService';
 import { useFriendsStore } from '@/src/stores/friendsStore';
 import { useNotificationStateStore } from '@/src/stores/notificationStateStore';
 import { useNotificationPermission } from '@/src/hooks/useNotificationPermission';
+import { ToastProvider } from '@/src/components/Toast';
 
 // Delay before requesting permission to allow sheet dismiss animation to complete
 const SHEET_DISMISS_DELAY_MS = 400;
@@ -100,20 +101,22 @@ export default function RootLayout(): React.ReactElement | null {
   return (
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider>
-        <StatusBar style="auto" />
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(tabs)" />
-          <Stack.Screen
-            name="add-friend"
-            options={{
-              presentation: 'formSheet',
-              sheetAllowedDetents: 'fitToContents',
-              sheetGrabberVisible: true,
-              headerShown: false,
-              contentStyle: { backgroundColor: 'transparent' },
-            }}
-          />
-        </Stack>
+        <ToastProvider>
+          <StatusBar style="auto" />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+            <Stack.Screen
+              name="add-friend"
+              options={{
+                presentation: 'formSheet',
+                sheetAllowedDetents: 'fitToContents',
+                sheetGrabberVisible: true,
+                headerShown: false,
+                contentStyle: { backgroundColor: 'transparent' },
+              }}
+            />
+          </Stack>
+        </ToastProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

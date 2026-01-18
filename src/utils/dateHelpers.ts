@@ -3,18 +3,20 @@
  */
 
 /**
- * Calculates days remaining until next check-in.
- * Negative values mean overdue.
+ * Parses a YYYY-MM-DD date string in local time (avoids UTC timezone issues)
  */
+function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 /**
  * Returns a human-readable relative date string for when last contact occurred.
  * Examples: "Today", "Yesterday", "Tuesday", "Last Tuesday", "2 weeks ago", "3 months ago"
  */
 export function getRelativeLastContact(lastContactAt: string): string {
-  const lastContact = new Date(lastContactAt);
+  const lastContact = parseLocalDate(lastContactAt);
   const today = new Date();
-
-  lastContact.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);
 
   const diffTime = today.getTime() - lastContact.getTime();
@@ -51,10 +53,8 @@ export function getRelativeLastContact(lastContactAt: string): string {
 }
 
 export function getDaysRemaining(lastContactAt: string, frequencyDays: number): number {
-  const lastContact = new Date(lastContactAt);
+  const lastContact = parseLocalDate(lastContactAt);
   const today = new Date();
-
-  lastContact.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);
 
   const daysSinceContact = Math.floor(

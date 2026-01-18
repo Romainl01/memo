@@ -221,6 +221,7 @@ export default function AddFriendScreen(): React.ReactElement {
           <GlassView
             style={[styles.glassButton, !isFormValid && styles.glassButtonDisabled]}
             tintColor={isFormValid ? colors.primary : undefined}
+            glassEffectStyle="clear"
           >
             <SymbolView
               name="checkmark"

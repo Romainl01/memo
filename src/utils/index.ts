@@ -1,1 +1,1 @@
-export { getDaysRemaining } from './dateHelpers';
+export { getDaysRemaining, getRelativeLastContact } from './dateHelpers';

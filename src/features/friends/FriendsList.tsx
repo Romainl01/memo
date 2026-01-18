@@ -1,7 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { FriendCard } from './FriendCard';
 import { useFriendsStore, Friend } from '@/src/stores/friendsStore';
+import { useToastStore } from '@/src/stores/toastStore';
 import { getDaysRemaining } from '@/src/utils';
 import { colors } from '@/src/constants/colors';
 import { typography } from '@/src/constants/typography';
@@ -16,6 +18,9 @@ function Separator(): React.ReactElement {
 
 function FriendsList({ onFriendPress }: FriendsListProps): React.ReactElement {
   const friends = useFriendsStore((state) => state.friends);
+  const logCatchUp = useFriendsStore((state) => state.logCatchUp);
+  const undoCatchUp = useFriendsStore((state) => state.undoCatchUp);
+  const showToast = useToastStore((state) => state.showToast);
 
   // Sort friends by urgency (most urgent/overdue first)
   const sortedFriends = useMemo(() => {
@@ -24,6 +29,16 @@ function FriendsList({ onFriendPress }: FriendsListProps): React.ReactElement {
       getDaysRemaining(b.lastContactAt, b.frequencyDays)
     );
   }, [friends]);
+
+  const handleCatchUp = useCallback((friend: Friend) => {
+    const previousDate = logCatchUp(friend.id);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    showToast(`Caught up with ${friend.name}!`, () => {
+      if (previousDate) {
+        undoCatchUp(friend.id, previousDate);
+      }
+    });
+  }, [logCatchUp, undoCatchUp, showToast]);
 
   if (friends.length === 0) {
     return (
@@ -39,7 +54,11 @@ function FriendsList({ onFriendPress }: FriendsListProps): React.ReactElement {
       data={sortedFriends}
       keyExtractor={(item) => item.id}
       renderItem={({ item }) => (
-        <FriendCard friend={item} onPress={() => onFriendPress?.(item)} />
+        <FriendCard
+          friend={item}
+          onPress={() => onFriendPress?.(item)}
+          onCatchUp={() => handleCatchUp(item)}
+        />
       )}
       contentContainerStyle={styles.listContent}
       ItemSeparatorComponent={Separator}
