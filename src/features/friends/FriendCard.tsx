@@ -45,26 +45,28 @@ function FriendCard({ friend, onPress }: FriendCardProps): React.ReactElement {
 
   return (
     <Pressable
-      style={styles.container}
       onPress={onPress}
       accessibilityLabel={`${friend.name}, ${statusLabel}`}
       accessibilityRole="button"
+      style={styles.shadowWrapper}
     >
-      <Avatar
-        name={friend.name}
-        imageUri={friend.photoUrl ?? undefined}
-        size={56}
-      />
+      <View style={styles.container}>
+        <Avatar
+          name={friend.name}
+          imageUri={friend.photoUrl ?? undefined}
+          size={56}
+        />
 
-      <View style={styles.content}>
-        <Text style={styles.name} numberOfLines={1}>
-          {friend.name}
-        </Text>
-        <View style={styles.statusContainer}>
-          <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-          <Text style={[styles.statusText, { color: statusColor }]}>
-            {statusLabel}
+        <View style={styles.content}>
+          <Text style={styles.name} numberOfLines={1}>
+            {friend.name}
           </Text>
+          <View style={styles.statusContainer}>
+            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+            <Text style={[styles.statusText, { color: statusColor }]}>
+              {statusLabel}
+            </Text>
+          </View>
         </View>
       </View>
     </Pressable>
@@ -72,19 +74,22 @@ function FriendCard({ friend, onPress }: FriendCardProps): React.ReactElement {
 }
 
 const styles = StyleSheet.create({
+  shadowWrapper: {
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 16 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 6,
+  },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    backgroundColor: colors.neutralWhite,
+    backgroundColor: colors.surfaceCard,
     borderRadius: 16,
+    overflow: 'hidden',
     gap: 12,
-    // Subtle shadow
-    shadowColor: colors.neutralDark,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
   },
   content: {
     flex: 1,

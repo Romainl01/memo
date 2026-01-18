@@ -17,6 +17,7 @@ export const colors = {
 
   // Surface
   surfaceLight: '#F9F7E8',
+  surfaceCard: 'rgba(255, 255, 255, 0.5)',
 
   // Feedback
   feedbackSuccess: '#0E9F6E',

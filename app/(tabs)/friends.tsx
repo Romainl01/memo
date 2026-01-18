@@ -46,14 +46,12 @@ export default function FriendsScreen() {
       return;
     }
 
-    // Set pending contact in store and navigate to modal
     setPendingContact(contact);
     router.push("/add-friend");
   }, [pickContact, isPicking, permissionStatus, hasFriend, setPendingContact]);
 
   const hasFriends = friends.length > 0;
 
-  // Show empty state
   if (!hasFriends) {
     return (
       <View style={styles.root}>
@@ -62,7 +60,6 @@ export default function FriendsScreen() {
     );
   }
 
-  // Show friends list
   return (
     <View style={styles.root}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -96,13 +93,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surfaceLight,
-    paddingHorizontal: 16,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingVertical: 16,
+    paddingHorizontal: 16,
   },
   title: {
     ...typography.titleH1,

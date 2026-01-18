@@ -50,7 +50,8 @@ function FriendsList({ onFriendPress }: FriendsListProps): React.ReactElement {
 
 const styles = StyleSheet.create({
   listContent: {
-    paddingVertical: 8,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
   },
   separator: {
     height: 12,
