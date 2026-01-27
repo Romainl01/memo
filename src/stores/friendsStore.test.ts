@@ -1,4 +1,4 @@
-import { useFriendsStore, Friend } from './friendsStore';
+import { useFriendsStore, Friend, FriendCategory } from './friendsStore';
 
 describe('friendsStore', () => {
   // Reset store state before each test
@@ -23,6 +23,7 @@ describe('friendsStore', () => {
         birthday: '1992-12-15',
         frequencyDays: 14,
         lastContactAt: '2024-01-10',
+        category: 'friend',
       };
 
       addFriend(newFriend);
@@ -34,6 +35,7 @@ describe('friendsStore', () => {
       expect(friends[0].birthday).toBe('1992-12-15');
       expect(friends[0].frequencyDays).toBe(14);
       expect(friends[0].lastContactAt).toBe('2024-01-10');
+      expect(friends[0].category).toBe('friend');
     });
 
     it('should generate an id for the new friend', () => {
@@ -45,6 +47,7 @@ describe('friendsStore', () => {
         birthday: '1990-05-20',
         frequencyDays: 30,
         lastContactAt: '2024-01-15',
+        category: 'family',
       });
 
       const { friends } = useFriendsStore.getState();
@@ -62,6 +65,7 @@ describe('friendsStore', () => {
         birthday: '1985-03-10',
         frequencyDays: 7,
         lastContactAt: '2024-01-01',
+        category: 'work',
       });
 
       const { friends } = useFriendsStore.getState();
@@ -72,12 +76,27 @@ describe('friendsStore', () => {
       expect(friends[0].createdAt <= afterAdd).toBe(true);
     });
 
+    it('should store the category field', () => {
+      const { addFriend } = useFriendsStore.getState();
+
+      const categories: FriendCategory[] = ['friend', 'family', 'work', 'partner', 'flirt'];
+      categories.forEach((category) => {
+        addFriend({ name: `Test ${category}`, photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01', category });
+      });
+
+      const { friends } = useFriendsStore.getState();
+      expect(friends).toHaveLength(5);
+      categories.forEach((category, index) => {
+        expect(friends[index].category).toBe(category);
+      });
+    });
+
     it('should allow adding multiple friends', () => {
       const { addFriend } = useFriendsStore.getState();
 
-      addFriend({ name: 'Friend 1', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
-      addFriend({ name: 'Friend 2', photoUrl: null, birthday: '1991-02-02', frequencyDays: 14, lastContactAt: '2024-01-02' });
-      addFriend({ name: 'Friend 3', photoUrl: null, birthday: '1992-03-03', frequencyDays: 30, lastContactAt: '2024-01-03' });
+      addFriend({ name: 'Friend 1', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01', category: 'friend' });
+      addFriend({ name: 'Friend 2', photoUrl: null, birthday: '1991-02-02', frequencyDays: 14, lastContactAt: '2024-01-02', category: 'family' });
+      addFriend({ name: 'Friend 3', photoUrl: null, birthday: '1992-03-03', frequencyDays: 30, lastContactAt: '2024-01-03', category: 'work' });
 
       const { friends } = useFriendsStore.getState();
       expect(friends).toHaveLength(3);
@@ -88,7 +107,7 @@ describe('friendsStore', () => {
     it('should remove a friend by id', () => {
       const { addFriend, removeFriend } = useFriendsStore.getState();
 
-      addFriend({ name: 'To Remove', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+      addFriend({ name: 'To Remove', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01', category: 'friend' });
 
       const { friends: friendsAfterAdd } = useFriendsStore.getState();
       const friendId = friendsAfterAdd[0].id;
@@ -102,8 +121,8 @@ describe('friendsStore', () => {
     it('should only remove the specified friend', () => {
       const { addFriend, removeFriend } = useFriendsStore.getState();
 
-      addFriend({ name: 'Keep Me', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
-      addFriend({ name: 'Remove Me', photoUrl: null, birthday: '1991-02-02', frequencyDays: 14, lastContactAt: '2024-01-02' });
+      addFriend({ name: 'Keep Me', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01', category: 'friend' });
+      addFriend({ name: 'Remove Me', photoUrl: null, birthday: '1991-02-02', frequencyDays: 14, lastContactAt: '2024-01-02', category: 'friend' });
 
       const { friends: friendsAfterAdd } = useFriendsStore.getState();
       const friendToRemove = friendsAfterAdd.find(f => f.name === 'Remove Me')!;
@@ -120,7 +139,7 @@ describe('friendsStore', () => {
     it('should return true if friend with name exists', () => {
       const { addFriend, hasFriend } = useFriendsStore.getState();
 
-      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01', category: 'friend' });
 
       expect(hasFriend('John Doe')).toBe(true);
     });
@@ -134,7 +153,7 @@ describe('friendsStore', () => {
     it('should be case-insensitive', () => {
       const { addFriend, hasFriend } = useFriendsStore.getState();
 
-      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01', category: 'friend' });
 
       expect(hasFriend('john doe')).toBe(true);
       expect(hasFriend('JOHN DOE')).toBe(true);
@@ -145,7 +164,7 @@ describe('friendsStore', () => {
     it('should return the friend with matching id', () => {
       const { addFriend, getFriendById } = useFriendsStore.getState();
 
-      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01', category: 'friend' });
 
       const { friends } = useFriendsStore.getState();
       const friend = getFriendById(friends[0].id);
@@ -166,7 +185,7 @@ describe('friendsStore', () => {
     it('should update lastContactAt to today', () => {
       const { addFriend, logCatchUp } = useFriendsStore.getState();
 
-      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01', category: 'friend' });
 
       const { friends: friendsBefore } = useFriendsStore.getState();
       const friendId = friendsBefore[0].id;
@@ -181,7 +200,7 @@ describe('friendsStore', () => {
     it('should return the previous lastContactAt value', () => {
       const { addFriend, logCatchUp } = useFriendsStore.getState();
 
-      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01', category: 'friend' });
 
       const { friends } = useFriendsStore.getState();
       const friendId = friends[0].id;
@@ -202,8 +221,8 @@ describe('friendsStore', () => {
     it('should only update the specified friend', () => {
       const { addFriend, logCatchUp } = useFriendsStore.getState();
 
-      addFriend({ name: 'Friend 1', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
-      addFriend({ name: 'Friend 2', photoUrl: null, birthday: '1991-02-02', frequencyDays: 14, lastContactAt: '2024-01-02' });
+      addFriend({ name: 'Friend 1', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01', category: 'friend' });
+      addFriend({ name: 'Friend 2', photoUrl: null, birthday: '1991-02-02', frequencyDays: 14, lastContactAt: '2024-01-02', category: 'friend' });
 
       const { friends: friendsBefore } = useFriendsStore.getState();
       const friend1Id = friendsBefore[0].id;
@@ -219,7 +238,7 @@ describe('friendsStore', () => {
     it('should restore the previous lastContactAt value', () => {
       const { addFriend, logCatchUp, undoCatchUp } = useFriendsStore.getState();
 
-      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01' });
+      addFriend({ name: 'John Doe', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01', category: 'friend' });
 
       const { friends } = useFriendsStore.getState();
       const friendId = friends[0].id;

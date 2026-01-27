@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import type { SelectedContact } from '@/src/hooks/useContacts';
 
+export type FriendCategory = 'friend' | 'family' | 'work' | 'partner' | 'flirt';
+
 export interface Friend {
   id: string;
   name: string;
@@ -8,6 +10,7 @@ export interface Friend {
   birthday: string; // ISO date string (YYYY-MM-DD) or MM-DD if no year
   frequencyDays: number;
   lastContactAt: string; // ISO date string (YYYY-MM-DD)
+  category: FriendCategory;
   createdAt: string; // ISO timestamp
 }
 

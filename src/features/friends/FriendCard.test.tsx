@@ -19,6 +19,7 @@ describe('FriendCard', () => {
     birthday: '1992-12-15',
     frequencyDays: 14,
     lastContactAt: toLocalDateString(new Date()), // Today
+    category: 'friend',
     createdAt: new Date().toISOString(),
   };
 
@@ -136,6 +137,37 @@ describe('FriendCard', () => {
       fireEvent.press(getByTestId('catchup-button'));
       expect(onCatchUp).toHaveBeenCalledTimes(1);
       expect(onPress).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('category pill', () => {
+    it('should render category pill with correct label', () => {
+      const { getByText } = render(<FriendCard friend={baseFriend} />);
+      expect(getByText('Friend')).toBeTruthy();
+    });
+
+    it('should render Family category', () => {
+      const familyFriend = { ...baseFriend, category: 'family' as const };
+      const { getByText } = render(<FriendCard friend={familyFriend} />);
+      expect(getByText('Family')).toBeTruthy();
+    });
+
+    it('should render Work category', () => {
+      const workFriend = { ...baseFriend, category: 'work' as const };
+      const { getByText } = render(<FriendCard friend={workFriend} />);
+      expect(getByText('Work')).toBeTruthy();
+    });
+
+    it('should render Partner category', () => {
+      const partnerFriend = { ...baseFriend, category: 'partner' as const };
+      const { getByText } = render(<FriendCard friend={partnerFriend} />);
+      expect(getByText('Partner')).toBeTruthy();
+    });
+
+    it('should render Flirt category', () => {
+      const flirtFriend = { ...baseFriend, category: 'flirt' as const };
+      const { getByText } = render(<FriendCard friend={flirtFriend} />);
+      expect(getByText('Flirt')).toBeTruthy();
     });
   });
 

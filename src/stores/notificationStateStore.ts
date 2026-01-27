@@ -8,6 +8,7 @@ interface NotificationStateStore {
   lastCatchUpNotificationDates: Record<string, string>; // friendId -> ISO date
   hasRequestedPermission: boolean;
   pendingPermissionRequest: boolean;
+  notificationsEnabled: boolean;
 
   // Actions
   setLastBirthdayNotificationDate: (date: string | null) => void;
@@ -15,6 +16,7 @@ interface NotificationStateStore {
   clearCatchUpNotificationDate: (friendId: string) => void;
   setHasRequestedPermission: (requested: boolean) => void;
   setPendingPermissionRequest: (pending: boolean) => void;
+  setNotificationsEnabled: (enabled: boolean) => void;
 
   // Helpers
   shouldSendBirthdayNotification: () => boolean;
@@ -29,6 +31,7 @@ const initialState = {
   lastCatchUpNotificationDates: {},
   hasRequestedPermission: false,
   pendingPermissionRequest: false,
+  notificationsEnabled: true,
 };
 
 /**
@@ -84,6 +87,10 @@ export const useNotificationStateStore = create<NotificationStateStore>()(
 
       setPendingPermissionRequest: (pending) => {
         set({ pendingPermissionRequest: pending });
+      },
+
+      setNotificationsEnabled: (enabled) => {
+        set({ notificationsEnabled: enabled });
       },
 
       shouldSendBirthdayNotification: () => {

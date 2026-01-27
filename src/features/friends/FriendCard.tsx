@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import { Avatar } from '@/src/components/Avatar';
-import { Friend } from '@/src/stores/friendsStore';
+import { Friend, FriendCategory } from '@/src/stores/friendsStore';
 import { getDaysRemaining, getRelativeLastContact } from '@/src/utils';
 import { colors } from '@/src/constants/colors';
 import { typography } from '@/src/constants/typography';
@@ -33,6 +33,14 @@ function getStatusColor(status: CheckInStatus): string {
   }
 }
 
+const CATEGORY_LABELS: Record<FriendCategory, string> = {
+  friend: 'Friend',
+  family: 'Family',
+  work: 'Work',
+  partner: 'Partner',
+  flirt: 'Flirt',
+};
+
 function FriendCard({ friend, onPress, onCatchUp }: FriendCardProps): React.ReactElement {
   const daysRemaining = getDaysRemaining(friend.lastContactAt, friend.frequencyDays);
   const status = getCheckInStatus(daysRemaining);
@@ -54,9 +62,16 @@ function FriendCard({ friend, onPress, onCatchUp }: FriendCardProps): React.Reac
         />
 
         <View style={styles.content}>
-          <Text style={styles.name} numberOfLines={1}>
-            {friend.name}
-          </Text>
+          <View style={styles.nameRow}>
+            <Text style={styles.name} numberOfLines={1}>
+              {friend.name}
+            </Text>
+            <View style={styles.categoryPill}>
+              <Text style={styles.categoryText}>
+                {CATEGORY_LABELS[friend.category]}
+              </Text>
+            </View>
+          </View>
           <View style={styles.statusContainer}>
             <View
               style={[styles.statusDot, { backgroundColor: statusColor }]}
@@ -107,12 +122,31 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    gap: 4,
+    gap: 6,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   name: {
     ...typography.body1,
     color: colors.neutralDark,
     fontWeight: '600',
+    flexShrink: 1,
+  },
+  categoryPill: {
+    backgroundColor: 'rgba(242, 140, 89, 0.1)',
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  categoryText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.primary,
   },
   statusContainer: {
     flexDirection: 'row',

@@ -1,11 +1,9 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "@/src/constants/colors";
 import { typography } from "@/src/constants/typography";
+import { SettingsScreen as SettingsContent } from "@/src/features/settings/SettingsScreen";
 
-/**
- * Settings tab - placeholder screen
- */
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
 
@@ -14,9 +12,9 @@ export default function SettingsScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Settings</Text>
       </View>
-      <View style={styles.content}>
-        <Text style={styles.placeholder}>Coming soon...</Text>
-      </View>
+      <ScrollView contentContainerStyle={styles.content}>
+        <SettingsContent />
+      </ScrollView>
     </View>
   );
 }
@@ -35,13 +33,6 @@ const styles = StyleSheet.create({
     color: colors.neutralDark,
   },
   content: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingBottom: 120,
-  },
-  placeholder: {
-    ...typography.body1,
-    color: colors.neutralGray300,
+    paddingBottom: 32,
   },
 });

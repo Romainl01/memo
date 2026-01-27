@@ -8,6 +8,7 @@ describe('notificationStateStore', () => {
       lastCatchUpNotificationDates: {},
       hasRequestedPermission: false,
       pendingPermissionRequest: false,
+      notificationsEnabled: true,
     });
   });
 
@@ -30,6 +31,11 @@ describe('notificationStateStore', () => {
     it('should start with pendingPermissionRequest as false', () => {
       const { pendingPermissionRequest } = useNotificationStateStore.getState();
       expect(pendingPermissionRequest).toBe(false);
+    });
+
+    it('should start with notificationsEnabled as true', () => {
+      const { notificationsEnabled } = useNotificationStateStore.getState();
+      expect(notificationsEnabled).toBe(true);
     });
   });
 
@@ -157,6 +163,25 @@ describe('notificationStateStore', () => {
     });
   });
 
+  describe('setNotificationsEnabled', () => {
+    it('should toggle notifications off', () => {
+      const { setNotificationsEnabled } = useNotificationStateStore.getState();
+
+      setNotificationsEnabled(false);
+
+      expect(useNotificationStateStore.getState().notificationsEnabled).toBe(false);
+    });
+
+    it('should toggle notifications back on', () => {
+      const { setNotificationsEnabled } = useNotificationStateStore.getState();
+
+      setNotificationsEnabled(false);
+      setNotificationsEnabled(true);
+
+      expect(useNotificationStateStore.getState().notificationsEnabled).toBe(true);
+    });
+  });
+
   describe('shouldSendBirthdayNotification', () => {
     beforeEach(() => {
       jest.useFakeTimers();
@@ -253,6 +278,7 @@ describe('notificationStateStore', () => {
         setLastCatchUpNotificationDate,
         setHasRequestedPermission,
         setPendingPermissionRequest,
+        setNotificationsEnabled,
         reset,
       } = useNotificationStateStore.getState();
 
@@ -261,6 +287,7 @@ describe('notificationStateStore', () => {
       setLastCatchUpNotificationDate('friend-1', '2024-06-15');
       setHasRequestedPermission(true);
       setPendingPermissionRequest(true);
+      setNotificationsEnabled(false);
 
       // Reset
       reset();
@@ -271,6 +298,7 @@ describe('notificationStateStore', () => {
       expect(state.lastCatchUpNotificationDates).toEqual({});
       expect(state.hasRequestedPermission).toBe(false);
       expect(state.pendingPermissionRequest).toBe(false);
+      expect(state.notificationsEnabled).toBe(true);
     });
   });
 });
