@@ -41,6 +41,11 @@ const FREQUENCY_MENU_ITEMS = [
   { label: 'None', value: null as FrequencyOption },
 ];
 
+/** Empty component for hiding the cancel button in DateTimePickerModal */
+function EmptyCancelButton(): null {
+  return null;
+}
+
 /**
  * Formats a BirthdayValue for display
  * Shows year if available: "Oct 20, 1995", otherwise "Oct 20"
@@ -175,7 +180,7 @@ export default function AddFriendScreen(): React.ReactElement {
   return (
     <View style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
       {/* Header with save button */}
-      <View style={[styles.header, { paddingTop: 16, paddingRight: 16 }]}>
+      <View style={styles.header}>
         <View style={styles.headerSpacer} />
         <Pressable
           onPress={handleSave}
@@ -253,23 +258,25 @@ export default function AddFriendScreen(): React.ReactElement {
             entering={FadeInDown.duration(300)}
             exiting={FadeOutDown.duration(200)}
           >
-            <BirthdayWheelPicker
-              value={birthday ?? { day: 1, month: 0 }}
-              onChange={setBirthday}
-            />
-            <View style={styles.doneButtonContainer}>
-              <Pressable
-                onPress={() => setShowBirthdayPicker(false)}
-                testID="birthday-done-button"
-              >
-                <GlassView
-                  style={styles.doneButton}
-                  tintColor={colors.primary}
-                  glassEffectStyle="clear"
+            <View style={styles.pickerPanel}>
+              <BirthdayWheelPicker
+                value={birthday ?? { day: 1, month: 0 }}
+                onChange={setBirthday}
+              />
+              <View style={styles.doneButtonContainer}>
+                <Pressable
+                  onPress={() => setShowBirthdayPicker(false)}
+                  testID="birthday-done-button"
                 >
-                  <Text style={styles.doneButtonText}>Done</Text>
-                </GlassView>
-              </Pressable>
+                  <GlassView
+                    style={styles.doneButton}
+                    tintColor={colors.primary}
+                    glassEffectStyle="clear"
+                  >
+                    <Text style={styles.doneButtonText}>Done</Text>
+                  </GlassView>
+                </Pressable>
+              </View>
             </View>
           </Animated.View>
         )}
@@ -337,7 +344,7 @@ export default function AddFriendScreen(): React.ReactElement {
             <Text style={styles.confirmButtonText}>{label}</Text>
           </Pressable>
         )}
-        customCancelButtonIOS={() => null}
+        customCancelButtonIOS={EmptyCancelButton}
       />
     </View>
   );
@@ -348,7 +355,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: 16,
     paddingLeft: 16,
+    paddingRight: 16,
   },
   headerSpacer: {
     width: BUTTON_SIZE,
@@ -421,5 +430,10 @@ const styles = StyleSheet.create({
     color: colors.neutralWhite,
     fontSize: 17,
     fontWeight: '600',
+  },
+  pickerPanel: {
+    borderRadius: 16,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
 });

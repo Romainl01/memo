@@ -2,6 +2,7 @@ import { useMemo, useCallback } from 'react';
 import { View, Text, FlatList, StyleSheet } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { FriendCard } from './FriendCard';
+import { FilteredEmptyState } from './FilteredEmptyState';
 import { useFriendsStore, Friend } from '@/src/stores/friendsStore';
 import { useToastStore } from '@/src/stores/toastStore';
 import { getDaysRemaining } from '@/src/utils';
@@ -10,25 +11,29 @@ import { typography } from '@/src/constants/typography';
 
 interface FriendsListProps {
   onFriendPress?: (friend: Friend) => void;
+  onAddFriend?: () => void;
 }
 
 function Separator(): React.ReactElement {
   return <View style={styles.separator} />;
 }
 
-function FriendsList({ onFriendPress }: FriendsListProps): React.ReactElement {
+function FriendsList({ onFriendPress, onAddFriend }: FriendsListProps): React.ReactElement {
   const friends = useFriendsStore((state) => state.friends);
+  const selectedCategory = useFriendsStore((state) => state.selectedCategory);
+  const getFilteredFriends = useFriendsStore((state) => state.getFilteredFriends);
   const logCatchUp = useFriendsStore((state) => state.logCatchUp);
   const undoCatchUp = useFriendsStore((state) => state.undoCatchUp);
   const showToast = useToastStore((state) => state.showToast);
 
-  // Sort friends by urgency (most urgent/overdue first)
+  // Get filtered friends and sort by urgency (most urgent/overdue first)
   const sortedFriends = useMemo(() => {
-    return [...friends].sort((a, b) =>
+    const filtered = getFilteredFriends();
+    return [...filtered].sort((a, b) =>
       getDaysRemaining(a.lastContactAt, a.frequencyDays) -
       getDaysRemaining(b.lastContactAt, b.frequencyDays)
     );
-  }, [friends]);
+  }, [getFilteredFriends]);
 
   const handleCatchUp = useCallback((friend: Friend) => {
     const previousDate = logCatchUp(friend.id);
@@ -40,12 +45,23 @@ function FriendsList({ onFriendPress }: FriendsListProps): React.ReactElement {
     });
   }, [logCatchUp, undoCatchUp, showToast]);
 
+  // Show general empty state when user has no friends at all
   if (friends.length === 0) {
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>No friends yet</Text>
         <Text style={styles.emptySubtext}>Add your first friend to get started!</Text>
       </View>
+    );
+  }
+
+  // Show filtered empty state when filter has no matches but friends exist
+  if (sortedFriends.length === 0 && selectedCategory !== null) {
+    return (
+      <FilteredEmptyState
+        category={selectedCategory}
+        onAddFriend={onAddFriend ?? (() => {})}
+      />
     );
   }
 

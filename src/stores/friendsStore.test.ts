@@ -3,7 +3,18 @@ import { useFriendsStore, Friend, FriendCategory } from './friendsStore';
 describe('friendsStore', () => {
   // Reset store state before each test
   beforeEach(() => {
-    useFriendsStore.setState({ friends: [] });
+    useFriendsStore.setState({ friends: [], selectedCategory: null });
+  });
+
+  // Helper to create test friends
+  const createTestFriend = (overrides: Partial<Omit<Friend, 'id' | 'createdAt'>> = {}): Omit<Friend, 'id' | 'createdAt'> => ({
+    name: 'Test Friend',
+    photoUrl: null,
+    birthday: '1990-01-01',
+    frequencyDays: 7,
+    lastContactAt: '2024-01-01',
+    category: 'friend',
+    ...overrides,
   });
 
   describe('initial state', () => {
@@ -254,6 +265,110 @@ describe('friendsStore', () => {
       const { undoCatchUp } = useFriendsStore.getState();
 
       expect(() => undoCatchUp('non-existent-id', '2024-01-01')).not.toThrow();
+    });
+  });
+
+  describe('selectedCategory', () => {
+    it('should default to null (All)', () => {
+      const { selectedCategory } = useFriendsStore.getState();
+      expect(selectedCategory).toBeNull();
+    });
+
+    it('should update when setSelectedCategory is called', () => {
+      const { setSelectedCategory } = useFriendsStore.getState();
+
+      setSelectedCategory('family');
+
+      const { selectedCategory } = useFriendsStore.getState();
+      expect(selectedCategory).toBe('family');
+    });
+
+    it('should allow setting back to null', () => {
+      const { setSelectedCategory } = useFriendsStore.getState();
+
+      setSelectedCategory('work');
+      setSelectedCategory(null);
+
+      const { selectedCategory } = useFriendsStore.getState();
+      expect(selectedCategory).toBeNull();
+    });
+  });
+
+  describe('getCategoryCounts', () => {
+    it('should return zero counts when no friends exist', () => {
+      const { getCategoryCounts } = useFriendsStore.getState();
+
+      const counts = getCategoryCounts();
+
+      expect(counts).toEqual({
+        all: 0,
+        friend: 0,
+        family: 0,
+        work: 0,
+        partner: 0,
+        flirt: 0,
+      });
+    });
+
+    it('should return correct counts per category', () => {
+      const { addFriend, getCategoryCounts } = useFriendsStore.getState();
+
+      addFriend(createTestFriend({ name: 'Friend 1', category: 'friend' }));
+      addFriend(createTestFriend({ name: 'Friend 2', category: 'friend' }));
+      addFriend(createTestFriend({ name: 'Family 1', category: 'family' }));
+      addFriend(createTestFriend({ name: 'Work 1', category: 'work' }));
+      addFriend(createTestFriend({ name: 'Work 2', category: 'work' }));
+      addFriend(createTestFriend({ name: 'Work 3', category: 'work' }));
+
+      const counts = getCategoryCounts();
+
+      expect(counts.all).toBe(6);
+      expect(counts.friend).toBe(2);
+      expect(counts.family).toBe(1);
+      expect(counts.work).toBe(3);
+      expect(counts.partner).toBe(0);
+      expect(counts.flirt).toBe(0);
+    });
+  });
+
+  describe('getFilteredFriends', () => {
+    it('should return all friends when selectedCategory is null', () => {
+      const { addFriend, getFilteredFriends } = useFriendsStore.getState();
+
+      addFriend(createTestFriend({ name: 'Friend 1', category: 'friend' }));
+      addFriend(createTestFriend({ name: 'Family 1', category: 'family' }));
+      addFriend(createTestFriend({ name: 'Work 1', category: 'work' }));
+
+      const filtered = getFilteredFriends();
+
+      expect(filtered).toHaveLength(3);
+    });
+
+    it('should return only friends of selected category', () => {
+      const { addFriend, setSelectedCategory, getFilteredFriends } = useFriendsStore.getState();
+
+      addFriend(createTestFriend({ name: 'Friend 1', category: 'friend' }));
+      addFriend(createTestFriend({ name: 'Friend 2', category: 'friend' }));
+      addFriend(createTestFriend({ name: 'Family 1', category: 'family' }));
+      addFriend(createTestFriend({ name: 'Work 1', category: 'work' }));
+
+      setSelectedCategory('friend');
+      const filtered = getFilteredFriends();
+
+      expect(filtered).toHaveLength(2);
+      expect(filtered.every((f) => f.category === 'friend')).toBe(true);
+    });
+
+    it('should return empty array when no friends match filter', () => {
+      const { addFriend, setSelectedCategory, getFilteredFriends } = useFriendsStore.getState();
+
+      addFriend(createTestFriend({ name: 'Friend 1', category: 'friend' }));
+      addFriend(createTestFriend({ name: 'Family 1', category: 'family' }));
+
+      setSelectedCategory('partner');
+      const filtered = getFilteredFriends();
+
+      expect(filtered).toHaveLength(0);
     });
   });
 });

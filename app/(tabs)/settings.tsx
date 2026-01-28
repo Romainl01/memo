@@ -1,10 +1,10 @@
-import { View, Text, ScrollView, StyleSheet } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors } from "@/src/constants/colors";
-import { typography } from "@/src/constants/typography";
-import { SettingsScreen as SettingsContent } from "@/src/features/settings/SettingsScreen";
+import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors } from '@/src/constants/colors';
+import { typography } from '@/src/constants/typography';
+import { SettingsScreen as SettingsContent } from '@/src/features/settings/SettingsScreen';
 
-export default function SettingsScreen() {
+export default function SettingsScreen(): React.ReactElement {
   const insets = useSafeAreaInsets();
 
   return (

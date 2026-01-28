@@ -117,6 +117,7 @@ function WheelColumn<T extends string | number>({
   const scrollRef = useRef<ScrollView>(null);
   const isUserScrolling = useRef(false);
   const lastReportedIndex = useRef(-1);
+  const lastHapticIndex = useRef(initialIndex);
 
   const selectedIndex = useMemo(
     () => Math.max(0, items.findIndex((item) => item.value === selectedValue)),
@@ -130,8 +131,21 @@ function WheelColumn<T extends string | number>({
         animated: false,
       });
       lastReportedIndex.current = selectedIndex;
+      lastHapticIndex.current = selectedIndex;
     }
   }, [selectedIndex]);
+
+  // Tick haptic as the wheel crosses each item boundary
+  useEffect(() => {
+    const listenerId = scrollY.addListener(({ value }) => {
+      const currentIndex = Math.round(value / ITEM_HEIGHT);
+      if (currentIndex !== lastHapticIndex.current && currentIndex >= 0 && currentIndex < items.length) {
+        lastHapticIndex.current = currentIndex;
+        Haptics.selectionAsync();
+      }
+    });
+    return () => scrollY.removeListener(listenerId);
+  }, [scrollY, items.length]);
 
   const handleMomentumScrollEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -141,7 +155,6 @@ function WheelColumn<T extends string | number>({
       const clampedIndex = Math.max(0, Math.min(index, items.length - 1));
       if (clampedIndex !== lastReportedIndex.current) {
         lastReportedIndex.current = clampedIndex;
-        Haptics.selectionAsync();
         onValueChange(items[clampedIndex].value);
       }
     },

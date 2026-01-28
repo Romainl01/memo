@@ -1,10 +1,11 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, Alert } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
 import { EmptyFriendsScreen, FriendsList } from "@/src/features/friends";
 import { GlassButton } from "@/src/components/GlassButton";
+import { RelationshipFilter } from "@/src/components/RelationshipFilter";
 import { useContacts } from "@/src/hooks/useContacts";
 import { useFriendsStore } from "@/src/stores/friendsStore";
 import { colors } from "@/src/constants/colors";
@@ -19,7 +20,12 @@ export default function FriendsScreen() {
   const friends = useFriendsStore((state) => state.friends);
   const hasFriend = useFriendsStore((state) => state.hasFriend);
   const setPendingContact = useFriendsStore((state) => state.setPendingContact);
+  const selectedCategory = useFriendsStore((state) => state.selectedCategory);
+  const setSelectedCategory = useFriendsStore((state) => state.setSelectedCategory);
+  const getCategoryCounts = useFriendsStore((state) => state.getCategoryCounts);
   const { pickContact, isPicking, permissionStatus } = useContacts();
+
+  const counts = useMemo(() => getCategoryCounts(), [getCategoryCounts]);
 
   const handleAddFriend = useCallback(async () => {
     if (isPicking) return;
@@ -80,7 +86,14 @@ export default function FriendsScreen() {
           />
         </View>
 
-        <FriendsList />
+        <RelationshipFilter
+          value={selectedCategory}
+          onChange={setSelectedCategory}
+          counts={counts}
+          style={styles.filter}
+        />
+
+        <FriendsList onAddFriend={handleAddFriend} />
       </View>
     </View>
   );
@@ -104,5 +117,8 @@ const styles = StyleSheet.create({
   title: {
     ...typography.titleH1,
     color: colors.neutralDark,
+  },
+  filter: {
+    paddingBottom: 8,
   },
 });

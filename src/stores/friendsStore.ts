@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { SelectedContact } from '@/src/hooks/useContacts';
 
 export type FriendCategory = 'friend' | 'family' | 'work' | 'partner' | 'flirt';
@@ -24,9 +26,12 @@ export interface Friend {
 
 export type NewFriend = Omit<Friend, 'id' | 'createdAt'>;
 
+export type CategoryCounts = Record<FriendCategory | 'all', number>;
+
 interface FriendsState {
   friends: Friend[];
   pendingContact: SelectedContact | null;
+  selectedCategory: FriendCategory | null;
   addFriend: (friend: NewFriend) => void;
   removeFriend: (id: string) => void;
   hasFriend: (name: string) => boolean;
@@ -34,6 +39,9 @@ interface FriendsState {
   setPendingContact: (contact: SelectedContact | null) => void;
   logCatchUp: (friendId: string) => string | undefined;
   undoCatchUp: (friendId: string, previousLastContactAt: string) => void;
+  setSelectedCategory: (category: FriendCategory | null) => void;
+  getCategoryCounts: () => CategoryCounts;
+  getFilteredFriends: () => Friend[];
 }
 
 /**
@@ -44,65 +52,108 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 }
 
-export const useFriendsStore = create<FriendsState>((set, get) => ({
-  friends: [],
-  pendingContact: null,
+export const useFriendsStore = create<FriendsState>()(
+  persist(
+    (set, get) => ({
+      friends: [],
+      pendingContact: null,
+      selectedCategory: null,
 
-  setPendingContact: (contact) => {
-    set({ pendingContact: contact });
-  },
+      setPendingContact: (contact) => {
+        set({ pendingContact: contact });
+      },
 
-  addFriend: (newFriend) => {
-    const friend: Friend = {
-      ...newFriend,
-      id: generateId(),
-      createdAt: new Date().toISOString(),
-    };
+      addFriend: (newFriend) => {
+        const friend: Friend = {
+          ...newFriend,
+          id: generateId(),
+          createdAt: new Date().toISOString(),
+        };
 
-    set((state) => ({
-      friends: [...state.friends, friend],
-    }));
-  },
+        set((state) => ({
+          friends: [...state.friends, friend],
+        }));
+      },
 
-  removeFriend: (id) => {
-    set((state) => ({
-      friends: state.friends.filter((friend) => friend.id !== id),
-    }));
-  },
+      removeFriend: (id) => {
+        set((state) => ({
+          friends: state.friends.filter((friend) => friend.id !== id),
+        }));
+      },
 
-  hasFriend: (name) => {
-    const { friends } = get();
-    const normalizedName = name.toLowerCase();
-    return friends.some((friend) => friend.name.toLowerCase() === normalizedName);
-  },
+      hasFriend: (name) => {
+        const { friends } = get();
+        const normalizedName = name.toLowerCase();
+        return friends.some((friend) => friend.name.toLowerCase() === normalizedName);
+      },
 
-  getFriendById: (id) => {
-    const { friends } = get();
-    return friends.find((friend) => friend.id === id);
-  },
+      getFriendById: (id) => {
+        const { friends } = get();
+        return friends.find((friend) => friend.id === id);
+      },
 
-  logCatchUp: (friendId) => {
-    const { friends } = get();
-    const friend = friends.find((f) => f.id === friendId);
-    if (!friend) return undefined;
+      logCatchUp: (friendId) => {
+        const { friends } = get();
+        const friend = friends.find((f) => f.id === friendId);
+        if (!friend) return undefined;
 
-    const previousDate = friend.lastContactAt;
-    const today = new Date().toISOString().split('T')[0];
+        const previousDate = friend.lastContactAt;
+        const today = new Date().toISOString().split('T')[0];
 
-    set((state) => ({
-      friends: state.friends.map((f) =>
-        f.id === friendId ? { ...f, lastContactAt: today } : f
-      ),
-    }));
+        set((state) => ({
+          friends: state.friends.map((f) =>
+            f.id === friendId ? { ...f, lastContactAt: today } : f
+          ),
+        }));
 
-    return previousDate;
-  },
+        return previousDate;
+      },
 
-  undoCatchUp: (friendId, previousLastContactAt) => {
-    set((state) => ({
-      friends: state.friends.map((f) =>
-        f.id === friendId ? { ...f, lastContactAt: previousLastContactAt } : f
-      ),
-    }));
-  },
-}));
+      undoCatchUp: (friendId, previousLastContactAt) => {
+        set((state) => ({
+          friends: state.friends.map((f) =>
+            f.id === friendId ? { ...f, lastContactAt: previousLastContactAt } : f
+          ),
+        }));
+      },
+
+      setSelectedCategory: (category) => {
+        set({ selectedCategory: category });
+      },
+
+      getCategoryCounts: () => {
+        const { friends } = get();
+        const counts: CategoryCounts = {
+          all: friends.length,
+          friend: 0,
+          family: 0,
+          work: 0,
+          partner: 0,
+          flirt: 0,
+        };
+
+        friends.forEach((f) => {
+          counts[f.category]++;
+        });
+
+        return counts;
+      },
+
+      getFilteredFriends: () => {
+        const { friends, selectedCategory } = get();
+        if (selectedCategory === null) {
+          return friends;
+        }
+        return friends.filter((f) => f.category === selectedCategory);
+      },
+    }),
+    {
+      name: 'friends-storage',
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        friends: state.friends,
+        selectedCategory: state.selectedCategory,
+      }),
+    }
+  )
+);

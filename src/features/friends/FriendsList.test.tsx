@@ -1,7 +1,7 @@
 import React from 'react';
-import { render } from '@testing-library/react-native';
+import { render, fireEvent } from '@testing-library/react-native';
 import { FriendsList } from './FriendsList';
-import { useFriendsStore } from '@/src/stores/friendsStore';
+import { useFriendsStore, FriendCategory } from '@/src/stores/friendsStore';
 
 // Helper to format date in local time (avoids UTC timezone issues)
 const toLocalDateString = (date: Date): string => {
@@ -13,7 +13,7 @@ const toLocalDateString = (date: Date): string => {
 
 describe('FriendsList', () => {
   beforeEach(() => {
-    useFriendsStore.setState({ friends: [] });
+    useFriendsStore.setState({ friends: [], selectedCategory: null });
   });
 
   describe('empty state', () => {
@@ -118,6 +118,81 @@ describe('FriendsList', () => {
       expect(cardButtons[0].props.accessibilityLabel).toContain('Overdue Friend');
       expect(cardButtons[1].props.accessibilityLabel).toContain('Due Soon Friend');
       expect(cardButtons[2].props.accessibilityLabel).toContain('On Track Friend');
+    });
+  });
+
+  describe('filtering', () => {
+    const today = toLocalDateString(new Date());
+
+    const createFriend = (overrides: { id: string; name: string; category: FriendCategory }) => ({
+      ...overrides,
+      photoUrl: null,
+      birthday: '1990-01-01',
+      frequencyDays: 7,
+      lastContactAt: today,
+      createdAt: new Date().toISOString(),
+    });
+
+    beforeEach(() => {
+      useFriendsStore.setState({
+        friends: [
+          createFriend({ id: '1', name: 'Alice (Friend)', category: 'friend' }),
+          createFriend({ id: '2', name: 'Bob (Family)', category: 'family' }),
+          createFriend({ id: '3', name: 'Carol (Work)', category: 'work' }),
+          createFriend({ id: '4', name: 'Dave (Family)', category: 'family' }),
+        ],
+        selectedCategory: null,
+      });
+    });
+
+    it('should show all friends when no filter is selected', () => {
+      const { getByText } = render(<FriendsList />);
+
+      expect(getByText('Alice (Friend)')).toBeTruthy();
+      expect(getByText('Bob (Family)')).toBeTruthy();
+      expect(getByText('Carol (Work)')).toBeTruthy();
+      expect(getByText('Dave (Family)')).toBeTruthy();
+    });
+
+    it('should show only matching friends when category filter is selected', () => {
+      useFriendsStore.setState({ selectedCategory: 'family' });
+
+      const { getByText, queryByText } = render(<FriendsList />);
+
+      expect(getByText('Bob (Family)')).toBeTruthy();
+      expect(getByText('Dave (Family)')).toBeTruthy();
+      expect(queryByText('Alice (Friend)')).toBeNull();
+      expect(queryByText('Carol (Work)')).toBeNull();
+    });
+
+    it('should show filtered empty state when filter has no matches', () => {
+      useFriendsStore.setState({ selectedCategory: 'partner' });
+      const mockOnAddFriend = jest.fn();
+
+      const { getByText } = render(<FriendsList onAddFriend={mockOnAddFriend} />);
+
+      expect(getByText('No Partner friends yet')).toBeTruthy();
+      expect(getByText('Add someone from your contacts to this category')).toBeTruthy();
+    });
+
+    it('should call onAddFriend when add button in filtered empty state is pressed', () => {
+      useFriendsStore.setState({ selectedCategory: 'partner' });
+      const mockOnAddFriend = jest.fn();
+
+      const { getByTestId } = render(<FriendsList onAddFriend={mockOnAddFriend} />);
+
+      fireEvent.press(getByTestId('filtered-empty-add-button'));
+      expect(mockOnAddFriend).toHaveBeenCalledTimes(1);
+    });
+
+    it('should show general empty state when no friends exist', () => {
+      useFriendsStore.setState({ friends: [], selectedCategory: 'family' });
+
+      const { getByText, queryByText } = render(<FriendsList />);
+
+      // Should show general empty state, not filtered empty state
+      expect(getByText(/no friends yet/i)).toBeTruthy();
+      expect(queryByText('No Family friends yet')).toBeNull();
     });
   });
 });
