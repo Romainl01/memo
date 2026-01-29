@@ -20,7 +20,7 @@ interface YearGridProps {
  * Each dot's color indicates whether the day has an entry, is today, or is in the future.
  */
 function YearGrid({ year, onDayPress, testID }: YearGridProps): React.ReactElement {
-  const hasEntryForDate = useJournalStore((state) => state.hasEntryForDate);
+  const entries = useJournalStore((state) => state.entries);
   const dates = generateYearDates(year);
 
   // Calculate padding for first row to align with weekday
@@ -46,19 +46,15 @@ function YearGrid({ year, onDayPress, testID }: YearGridProps): React.ReactEleme
         ))}
 
         {/* Day dots */}
-        {dates.map((date) => {
-          const status = getDotStatus(date, hasEntryForDate);
-
-          return (
-            <View key={date} style={styles.cell}>
-              <DayDot
-                status={status}
-                onPress={() => onDayPress(date)}
-                testID={`day-dot-${date}`}
-              />
-            </View>
-          );
-        })}
+        {dates.map((date) => (
+          <View key={date} style={styles.cell}>
+            <DayDot
+              status={getDotStatus(date, entries)}
+              onPress={() => onDayPress(date)}
+              testID={`day-dot-${date}`}
+            />
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -66,7 +62,7 @@ function YearGrid({ year, onDayPress, testID }: YearGridProps): React.ReactEleme
 
 function getDotStatus(
   date: string,
-  hasEntryForDate: (date: string) => boolean
+  entries: Record<string, unknown>
 ): DayDotStatus {
   if (isToday(date)) {
     return 'today';
@@ -76,7 +72,7 @@ function getDotStatus(
     return 'future';
   }
 
-  return hasEntryForDate(date) ? 'past-with-entry' : 'past-without-entry';
+  return date in entries ? 'past-with-entry' : 'past-without-entry';
 }
 
 const styles = StyleSheet.create({

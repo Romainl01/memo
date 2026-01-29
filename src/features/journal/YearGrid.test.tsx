@@ -2,11 +2,10 @@ import { render, fireEvent } from '@testing-library/react-native';
 import { YearGrid } from './YearGrid';
 
 // Mock the journal store
-const mockHasEntryForDate = jest.fn(() => false);
 jest.mock('@/src/stores/journalStore', () => ({
   useJournalStore: jest.fn((selector) => {
     const state = {
-      hasEntryForDate: mockHasEntryForDate,
+      entries: {}, // Empty entries - no days have entries
     };
     return selector(state);
   }),

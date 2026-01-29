@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 
@@ -7,11 +8,7 @@ import { colors } from '@/src/constants/colors';
 import { typography } from '@/src/constants/typography';
 import { GlassButton } from '@/src/components/GlassButton';
 import { YearGrid, DaysRemainingCounter } from '@/src/features/journal';
-import {
-  getDaysRemainingInYear,
-  formatJournalDate,
-  toDateString,
-} from '@/src/utils/journalDateHelpers';
+import { getDaysRemainingInYear, toDateString } from '@/src/utils/journalDateHelpers';
 
 // Standard iOS tab bar height (49px) + safe area bottom inset
 const TAB_BAR_HEIGHT = 49;
@@ -27,8 +24,7 @@ export default function JournalScreen(): React.ReactElement {
   const daysRemaining = getDaysRemainingInYear();
 
   const handleDayPress = useCallback((date: string) => {
-    const formattedDate = formatJournalDate(date);
-    Alert.alert('Journal Entry', formattedDate);
+    router.push(`/journal-entry/${date}`);
   }, []);
 
   const handleTodayPress = useCallback(() => {

@@ -119,6 +119,13 @@ export default function RootLayout(): React.ReactElement | null {
                 contentStyle: { backgroundColor: 'transparent' },
               }}
             />
+            <Stack.Screen
+              name="journal-entry/[date]"
+              options={{
+                presentation: 'card',
+                animation: 'slide_from_right',
+              }}
+            />
           </Stack>
         </ToastProvider>
       </SafeAreaProvider>
