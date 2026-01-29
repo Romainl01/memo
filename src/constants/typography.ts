@@ -5,6 +5,7 @@
  * Font families:
  * - Crimson Pro (headings)
  * - Inter (body)
+ * - IBM Plex Mono (journal counter & editor)
  */
 
 export const fontFamilies = {
@@ -14,6 +15,9 @@ export const fontFamilies = {
   body: 'Inter',
   bodyMedium: 'Inter_500Medium',
   bodyRegular: 'Inter_400Regular',
+  mono: 'IBMPlexMono',
+  monoMedium: 'IBMPlexMono_500Medium',
+  monoRegular: 'IBMPlexMono_400Regular',
 } as const;
 
 export const typography = {
@@ -60,6 +64,22 @@ export const typography = {
     fontSize: 14,
     fontWeight: '400' as const,
     lineHeight: 14, // 100%
+    letterSpacing: 0,
+  },
+
+  // Monospace - IBM Plex Mono (journal)
+  mono1: {
+    fontFamily: fontFamilies.monoMedium,
+    fontSize: 16,
+    fontWeight: '500' as const,
+    lineHeight: 24,
+    letterSpacing: 0,
+  },
+  mono2: {
+    fontFamily: fontFamilies.monoRegular,
+    fontSize: 14,
+    fontWeight: '400' as const,
+    lineHeight: 20,
     letterSpacing: 0,
   },
 } as const;

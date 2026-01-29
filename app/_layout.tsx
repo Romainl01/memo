@@ -15,6 +15,10 @@ import {
   Inter_400Regular,
   Inter_500Medium,
 } from '@expo-google-fonts/inter';
+import {
+  IBMPlexMono_400Regular,
+  IBMPlexMono_500Medium,
+} from '@expo-google-fonts/ibm-plex-mono';
 import { NotificationService } from '@/src/services/notificationService';
 import { useFriendsStore } from '@/src/stores/friendsStore';
 import { useNotificationStateStore } from '@/src/stores/notificationStateStore';
@@ -45,6 +49,8 @@ export default function RootLayout(): React.ReactElement | null {
     CrimsonPro_500Medium,
     Inter_400Regular,
     Inter_500Medium,
+    IBMPlexMono_400Regular,
+    IBMPlexMono_500Medium,
   });
 
   useEffect(() => {
