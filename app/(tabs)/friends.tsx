@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { SymbolView } from 'expo-symbols';
 import { EmptyFriendsScreen, FriendsList } from '@/src/features/friends';
 import { GlassButton } from '@/src/components/GlassButton';
@@ -17,6 +18,7 @@ import { typography } from '@/src/constants/typography';
  */
 export default function FriendsScreen(): React.ReactElement {
   const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
   const friends = useFriendsStore((state) => state.friends);
   const hasFriend = useFriendsStore((state) => state.hasFriend);
   const setPendingContact = useFriendsStore((state) => state.setPendingContact);
@@ -58,7 +60,7 @@ export default function FriendsScreen(): React.ReactElement {
   if (!hasFriends) {
     return (
       <View style={styles.root}>
-        <EmptyFriendsScreen onAddFriend={handleAddFriend} />
+        <EmptyFriendsScreen onAddFriend={handleAddFriend} tabBarHeight={tabBarHeight} />
       </View>
     );
   }
@@ -86,7 +88,7 @@ export default function FriendsScreen(): React.ReactElement {
       <GlassButton
         onPress={handleAddFriend}
         size={56}
-        style={styles.fab}
+        style={[styles.fab, { bottom: tabBarHeight + 16 }]}
         icon={
           <SymbolView
             name="person.fill.badge.plus"
@@ -128,6 +130,5 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 20,
-    bottom: 100,
   },
 });

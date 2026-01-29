@@ -7,6 +7,7 @@ import { typography } from "@/src/constants/typography";
 
 interface EmptyFriendsScreenProps {
   onAddFriend: () => void;
+  tabBarHeight: number;
 }
 
 /**
@@ -16,7 +17,7 @@ interface EmptyFriendsScreenProps {
  * TODO: Add fallback icon for Android/Web using @expo/vector-icons
  * The SymbolView "plus" icon only works on iOS.
  */
-export function EmptyFriendsScreen({ onAddFriend }: EmptyFriendsScreenProps) {
+export function EmptyFriendsScreen({ onAddFriend, tabBarHeight }: EmptyFriendsScreenProps) {
   const insets = useSafeAreaInsets();
 
   return (
@@ -46,7 +47,7 @@ export function EmptyFriendsScreen({ onAddFriend }: EmptyFriendsScreenProps) {
       <GlassButton
         onPress={onAddFriend}
         size={56}
-        style={styles.fab}
+        style={[styles.fab, { bottom: tabBarHeight + 16 }]}
         icon={
           <SymbolView
             name="person.fill.badge.plus"
@@ -97,6 +98,5 @@ const styles = StyleSheet.create({
   fab: {
     position: "absolute",
     right: 20,
-    bottom: 100,
   },
 });
