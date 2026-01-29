@@ -124,6 +124,7 @@ export default function RootLayout(): React.ReactElement | null {
               options={{
                 presentation: 'card',
                 animation: 'slide_from_right',
+                gestureEnabled: false, // We handle gestures ourselves for swipe navigation
               }}
             />
           </Stack>

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
@@ -10,18 +10,36 @@ import { GlassButton } from '@/src/components/GlassButton';
 import { YearGrid, DaysRemainingCounter } from '@/src/features/journal';
 import { getDaysRemainingInYear, toDateString } from '@/src/utils/journalDateHelpers';
 
-// Standard iOS tab bar height (49px) + safe area bottom inset
+// Standard iOS tab bar height
 const TAB_BAR_HEIGHT = 49;
+// Header height (padding + title)
+const HEADER_HEIGHT = 60;
+// FAB size + margin above tab bar
+const FAB_AREA_HEIGHT = 56 + 16;
+// Horizontal padding for the grid
+const HORIZONTAL_PADDING = 16;
 
 /**
  * Journal tab - year view with 365 colored dots representing each day.
- * Users can tap any past day to write/edit entries.
+ * The entire year fits on one screen without scrolling.
  */
 export default function JournalScreen(): React.ReactElement {
   const insets = useSafeAreaInsets();
-  const tabBarHeight = TAB_BAR_HEIGHT + insets.bottom;
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const currentYear = new Date().getFullYear();
   const daysRemaining = getDaysRemainingInYear();
+
+  // Calculate available space for the grid
+  const availableWidth = screenWidth - HORIZONTAL_PADDING * 2;
+  const availableHeight =
+    screenHeight -
+    insets.top -
+    HEADER_HEIGHT -
+    FAB_AREA_HEIGHT -
+    TAB_BAR_HEIGHT -
+    insets.bottom;
+
+  const tabBarHeight = TAB_BAR_HEIGHT + insets.bottom;
 
   const handleDayPress = useCallback((date: string) => {
     router.push(`/journal-entry/${date}`);
@@ -39,13 +57,14 @@ export default function JournalScreen(): React.ReactElement {
           <DaysRemainingCounter daysRemaining={daysRemaining} />
         </View>
 
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <YearGrid year={currentYear} onDayPress={handleDayPress} />
-        </ScrollView>
+        <View style={styles.gridContainer}>
+          <YearGrid
+            year={currentYear}
+            availableWidth={availableWidth}
+            availableHeight={availableHeight}
+            onDayPress={handleDayPress}
+          />
+        </View>
       </View>
 
       {/* Floating Action Button */}
@@ -76,19 +95,20 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceLight,
   },
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
     paddingVertical: 16,
     paddingHorizontal: 16,
-    gap: 4,
+    height: HEADER_HEIGHT,
   },
   title: {
     ...typography.titleH1,
     color: colors.neutralDark,
   },
-  scrollView: {
+  gridContainer: {
     flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 100,
+    justifyContent: 'center',
   },
   fab: {
     position: 'absolute',

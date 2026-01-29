@@ -1,12 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import {
   View,
-  Text,
   TextInput,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -15,12 +13,17 @@ import { SymbolView } from 'expo-symbols';
 import { colors } from '@/src/constants/colors';
 import { typography } from '@/src/constants/typography';
 import { useJournalStore } from '@/src/stores/journalStore';
-import { formatJournalDate } from '@/src/utils/journalDateHelpers';
+import { useAutoSave } from '@/src/hooks/useAutoSave';
+import { GlassButton } from '@/src/components/GlassButton';
+import { GlassDateChip } from '@/src/components/GlassDateChip';
+import { SwipeableJournalContainer } from '@/src/features/journal/SwipeableJournalContainer';
 
 /**
- * Full-screen journal entry editor.
- * Opens for a specific date, loads existing content if available,
- * and auto-saves on back navigation.
+ * Full-screen journal entry editor with liquid glass UI.
+ * Features:
+ * - Glass back button and date chip header
+ * - Swipe left/right to navigate between days
+ * - Debounced auto-save with visual feedback
  */
 export default function JournalEntryScreen(): React.ReactElement {
   const { date } = useLocalSearchParams<{ date: string }>();
@@ -39,50 +42,92 @@ export default function JournalEntryScreen(): React.ReactElement {
     }
   }, [date, getEntryByDate]);
 
-  const handleBack = useCallback(() => {
-    // Auto-save before navigating back
-    if (date && content.trim()) {
-      upsertEntry(date, content);
-    }
-    router.back();
-  }, [date, content, upsertEntry]);
+  // Auto-save with debounce
+  const handleSave = useCallback(
+    (contentToSave: string) => {
+      if (date) {
+        upsertEntry(date, contentToSave);
+      }
+    },
+    [date, upsertEntry]
+  );
 
-  const formattedDate = date ? formatJournalDate(date) : '';
+  const { justSaved, saveNow } = useAutoSave({
+    content,
+    onSave: handleSave,
+    debounceMs: 500,
+  });
+
+  const handleBack = useCallback(() => {
+    saveNow();
+    router.back();
+  }, [saveNow]);
+
+  const handleDateChange = useCallback(
+    (newDate: string) => {
+      // Save current content before navigating
+      saveNow();
+      // Navigate to new date
+      router.replace(`/journal-entry/${newDate}`);
+    },
+    [saveNow]
+  );
+
+  if (!date) {
+    return <View style={styles.container} />;
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={handleBack} style={styles.backButton} hitSlop={8}>
-          <SymbolView
-            name="chevron.left"
-            size={24}
-            weight="semibold"
-            tintColor={colors.primary}
-          />
-        </Pressable>
-        <Text style={styles.dateText}>{formattedDate}</Text>
-        {/* Spacer to center the date text */}
-        <View style={styles.backButton} />
+        <GlassButton
+          onPress={handleBack}
+          icon={
+            <SymbolView
+              name="chevron.left"
+              size={20}
+              weight="semibold"
+              tintColor={colors.neutralDark}
+            />
+          }
+          size={40}
+          testID="back-button"
+        />
+        <GlassDateChip
+          date={date}
+          showSavedIndicator={justSaved}
+          testID="date-chip"
+        />
+        {/* Spacer to balance the layout */}
+        <View style={styles.spacer} />
       </View>
 
-      {/* Editor */}
-      <KeyboardAvoidingView
-        style={styles.editorContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={insets.top + 60}
+      {/* Swipeable Editor */}
+      <SwipeableJournalContainer
+        currentDate={date}
+        onDateChange={handleDateChange}
+        onSwipeStart={saveNow}
+        testID="swipeable-container"
       >
-        <TextInput
-          style={styles.textInput}
-          value={content}
-          onChangeText={setContent}
-          placeholder="Write about your day..."
-          placeholderTextColor={colors.neutralGray300}
-          multiline
-          textAlignVertical="top"
-          autoFocus
-        />
-      </KeyboardAvoidingView>
+        <KeyboardAvoidingView
+          style={styles.editorContainer}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={insets.top + 60}
+        >
+          <TextInput
+            style={styles.textInput}
+            value={content}
+            onChangeText={setContent}
+            placeholder="Write about your day..."
+            placeholderTextColor={colors.neutralGray300}
+            multiline
+            textAlignVertical="top"
+            autoFocus
+            testID="journal-input"
+          />
+        </KeyboardAvoidingView>
+      </SwipeableJournalContainer>
     </View>
   );
 }
@@ -98,20 +143,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.neutralGray200,
   },
-  backButton: {
+  spacer: {
     width: 40,
     height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  dateText: {
-    ...typography.body1,
-    color: colors.neutralDark,
-    flex: 1,
-    textAlign: 'center',
   },
   editorContainer: {
     flex: 1,

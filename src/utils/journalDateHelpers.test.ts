@@ -5,6 +5,11 @@ import {
   isToday,
   isPastOrToday,
   toDateString,
+  getPreviousDate,
+  getNextDate,
+  canGoToNextDate,
+  canGoToPreviousDate,
+  formatShortDate,
 } from './journalDateHelpers';
 
 describe('journalDateHelpers', () => {
@@ -142,6 +147,87 @@ describe('journalDateHelpers', () => {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
       expect(isPastOrToday(toDateString(tomorrow))).toBe(false);
+    });
+  });
+
+  describe('getPreviousDate', () => {
+    it('should return the previous day', () => {
+      expect(getPreviousDate('2025-01-15')).toBe('2025-01-14');
+    });
+
+    it('should handle month boundaries', () => {
+      expect(getPreviousDate('2025-03-01')).toBe('2025-02-28');
+      expect(getPreviousDate('2024-03-01')).toBe('2024-02-29'); // leap year
+    });
+
+    it('should handle year boundaries', () => {
+      expect(getPreviousDate('2025-01-01')).toBe('2024-12-31');
+    });
+  });
+
+  describe('getNextDate', () => {
+    it('should return the next day', () => {
+      expect(getNextDate('2025-01-15')).toBe('2025-01-16');
+    });
+
+    it('should handle month boundaries', () => {
+      expect(getNextDate('2025-01-31')).toBe('2025-02-01');
+      expect(getNextDate('2024-02-29')).toBe('2024-03-01'); // leap year
+    });
+
+    it('should handle year boundaries', () => {
+      expect(getNextDate('2024-12-31')).toBe('2025-01-01');
+    });
+  });
+
+  describe('canGoToNextDate', () => {
+    it('should return false for today', () => {
+      const today = toDateString(new Date());
+      expect(canGoToNextDate(today)).toBe(false);
+    });
+
+    it('should return true for yesterday', () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      expect(canGoToNextDate(toDateString(yesterday))).toBe(true);
+    });
+
+    it('should return true for past dates', () => {
+      expect(canGoToNextDate('2020-06-15')).toBe(true);
+    });
+  });
+
+  describe('canGoToPreviousDate', () => {
+    it('should return false for January 1st of current year', () => {
+      const year = new Date().getFullYear();
+      expect(canGoToPreviousDate(`${year}-01-01`)).toBe(false);
+    });
+
+    it('should return true for January 2nd', () => {
+      const year = new Date().getFullYear();
+      expect(canGoToPreviousDate(`${year}-01-02`)).toBe(true);
+    });
+
+    it('should return true for dates after January 1st', () => {
+      const year = new Date().getFullYear();
+      expect(canGoToPreviousDate(`${year}-06-15`)).toBe(true);
+    });
+  });
+
+  describe('formatShortDate', () => {
+    it('should format date as short weekday and month', () => {
+      const result = formatShortDate('2025-01-29');
+      expect(result).toBe('Wed, Jan 29');
+    });
+
+    it('should handle different months', () => {
+      expect(formatShortDate('2025-07-04')).toBe('Fri, Jul 4');
+      expect(formatShortDate('2025-12-25')).toBe('Thu, Dec 25');
+    });
+
+    it('should abbreviate weekday and month', () => {
+      const result = formatShortDate('2025-03-15');
+      expect(result).toBe('Sat, Mar 15');
     });
   });
 });

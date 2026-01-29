@@ -32,6 +32,13 @@ jest.mock('@/src/utils/journalDateHelpers', () => ({
   }),
 }));
 
+// Default dimensions for testing
+const DEFAULT_PROPS = {
+  year: 2025,
+  availableWidth: 375,
+  availableHeight: 600,
+};
+
 describe('YearGrid', () => {
   const mockOnDayPress = jest.fn();
 
@@ -42,28 +49,15 @@ describe('YearGrid', () => {
   describe('rendering', () => {
     it('should render without crashing', () => {
       const { getByTestId } = render(
-        <YearGrid year={2025} onDayPress={mockOnDayPress} testID="year-grid" />
+        <YearGrid {...DEFAULT_PROPS} onDayPress={mockOnDayPress} testID="year-grid" />
       );
 
       expect(getByTestId('year-grid')).toBeTruthy();
     });
 
-    it('should render weekday headers', () => {
-      const { getAllByText } = render(
-        <YearGrid year={2025} onDayPress={mockOnDayPress} />
-      );
-
-      // S appears twice (Sun, Sat), T appears twice (Tue, Thu)
-      expect(getAllByText('S')).toHaveLength(2);
-      expect(getAllByText('M')).toHaveLength(1);
-      expect(getAllByText('T')).toHaveLength(2);
-      expect(getAllByText('W')).toHaveLength(1);
-      expect(getAllByText('F')).toHaveLength(1);
-    });
-
     it('should render day dots', () => {
       const { getAllByTestId } = render(
-        <YearGrid year={2025} onDayPress={mockOnDayPress} />
+        <YearGrid {...DEFAULT_PROPS} onDayPress={mockOnDayPress} />
       );
 
       // Should have 7 dots for our mocked week
@@ -75,7 +69,7 @@ describe('YearGrid', () => {
   describe('interactions', () => {
     it('should call onDayPress when a past day is pressed', () => {
       const { getByTestId } = render(
-        <YearGrid year={2025} onDayPress={mockOnDayPress} />
+        <YearGrid {...DEFAULT_PROPS} onDayPress={mockOnDayPress} />
       );
 
       fireEvent.press(getByTestId('day-dot-2025-01-01'));
@@ -85,7 +79,7 @@ describe('YearGrid', () => {
 
     it('should call onDayPress when today is pressed', () => {
       const { getByTestId } = render(
-        <YearGrid year={2025} onDayPress={mockOnDayPress} />
+        <YearGrid {...DEFAULT_PROPS} onDayPress={mockOnDayPress} />
       );
 
       fireEvent.press(getByTestId('day-dot-2025-01-03'));
@@ -95,7 +89,7 @@ describe('YearGrid', () => {
 
     it('should NOT call onDayPress when a future day is pressed', () => {
       const { getByTestId } = render(
-        <YearGrid year={2025} onDayPress={mockOnDayPress} />
+        <YearGrid {...DEFAULT_PROPS} onDayPress={mockOnDayPress} />
       );
 
       // 2025-01-04 is a future date in our mock
@@ -108,7 +102,7 @@ describe('YearGrid', () => {
   describe('accessibility', () => {
     it('should have testID when provided', () => {
       const { getByTestId } = render(
-        <YearGrid year={2025} onDayPress={mockOnDayPress} testID="custom-grid" />
+        <YearGrid {...DEFAULT_PROPS} onDayPress={mockOnDayPress} testID="custom-grid" />
       );
 
       expect(getByTestId('custom-grid')).toBeTruthy();

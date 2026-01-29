@@ -10,12 +10,11 @@ export type DayDotStatus =
 
 interface DayDotProps {
   status: DayDotStatus;
+  /** Size of the cell containing the dot */
+  size: number;
   onPress?: () => void;
   testID?: string;
 }
-
-const DOT_SIZE = 10;
-const TODAY_RING_SIZE = 16;
 
 /**
  * A single dot representing one day in the year grid.
@@ -26,20 +25,41 @@ const TODAY_RING_SIZE = 16;
  * - today: Orange with outer ring
  * - future: Very faint gray, not pressable
  */
-function DayDot({ status, onPress, testID }: DayDotProps): React.ReactElement {
+function DayDot({ status, size, onPress, testID }: DayDotProps): React.ReactElement {
   const isFuture = status === 'future';
   const isToday = status === 'today';
+
+  // Dot is 70% of cell size
+  const dotSize = Math.max(4, size * 0.7);
 
   return (
     <Pressable
       onPress={onPress}
       disabled={isFuture}
       testID={testID}
-      style={styles.container}
+      style={[styles.container, { width: size, height: size }]}
       hitSlop={{ top: 4, bottom: 4, left: 4, right: 4 }}
     >
-      {isToday && <View style={styles.todayRing} />}
-      <View style={[styles.dot, { backgroundColor: getDotColor(status) }]} />
+      {isToday && (
+        <View
+          style={[
+            styles.todayRing,
+            {
+              width: size,
+              height: size,
+              borderRadius: size / 2,
+            },
+          ]}
+        />
+      )}
+      <View
+        style={{
+          width: dotSize,
+          height: dotSize,
+          borderRadius: dotSize / 2,
+          backgroundColor: getDotColor(status),
+        }}
+      />
     </Pressable>
   );
 }
@@ -58,22 +78,12 @@ function getDotColor(status: DayDotStatus): string {
 
 const styles = StyleSheet.create({
   container: {
-    width: TODAY_RING_SIZE,
-    height: TODAY_RING_SIZE,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  dot: {
-    width: DOT_SIZE,
-    height: DOT_SIZE,
-    borderRadius: DOT_SIZE / 2,
-  },
   todayRing: {
     position: 'absolute',
-    width: TODAY_RING_SIZE,
-    height: TODAY_RING_SIZE,
-    borderRadius: TODAY_RING_SIZE / 2,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: colors.primary,
   },
 });

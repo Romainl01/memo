@@ -1,59 +1,88 @@
-import { View, Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 
-import { colors } from '@/src/constants/colors';
-import { typography } from '@/src/constants/typography';
 import { useJournalStore } from '@/src/stores/journalStore';
 import { generateYearDates, isToday, isPastOrToday } from '@/src/utils/journalDateHelpers';
 import { DayDot, DayDotStatus } from './DayDot';
 
-const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-const COLUMNS = 7;
+const GAP = 2;
+const MIN_COLUMNS = 12;
+const MAX_COLUMNS = 25;
 
 interface YearGridProps {
   year: number;
+  /** Available width for the grid */
+  availableWidth: number;
+  /** Available height for the grid */
+  availableHeight: number;
   onDayPress: (date: string) => void;
   testID?: string;
 }
 
 /**
- * A 7-column grid showing all 365 days of the year as colored dots.
- * Each dot's color indicates whether the day has an entry, is today, or is in the future.
+ * Calculates the optimal grid layout to fit all days within available space.
+ * Tries different column counts and picks the one that maximizes cell size.
  */
-function YearGrid({ year, onDayPress, testID }: YearGridProps): React.ReactElement {
+function calculateGridLayout(
+  totalDays: number,
+  availableWidth: number,
+  availableHeight: number
+): { columns: number; cellSize: number } {
+  let bestColumns = MIN_COLUMNS;
+  let bestCellSize = 0;
+
+  for (let cols = MIN_COLUMNS; cols <= MAX_COLUMNS; cols++) {
+    const rows = Math.ceil(totalDays / cols);
+
+    // Calculate max cell size that fits in width
+    const maxCellFromWidth = (availableWidth - (cols - 1) * GAP) / cols;
+    // Calculate max cell size that fits in height
+    const maxCellFromHeight = (availableHeight - (rows - 1) * GAP) / rows;
+
+    // Cell size is limited by the smaller dimension
+    const cellSize = Math.min(maxCellFromWidth, maxCellFromHeight);
+
+    if (cellSize > bestCellSize) {
+      bestCellSize = cellSize;
+      bestColumns = cols;
+    }
+  }
+
+  return { columns: bestColumns, cellSize: Math.floor(bestCellSize) };
+}
+
+/**
+ * A dense grid showing all 365 days of the year as colored dots.
+ * Dynamically calculates layout to fit entire year on screen.
+ */
+function YearGrid({
+  year,
+  availableWidth,
+  availableHeight,
+  onDayPress,
+  testID,
+}: YearGridProps): React.ReactElement {
   const entries = useJournalStore((state) => state.entries);
   const dates = generateYearDates(year);
 
-  // Calculate padding for first row to align with weekday
-  const firstDate = new Date(year, 0, 1);
-  const startPadding = firstDate.getDay(); // 0 = Sunday, 6 = Saturday
+  const { columns, cellSize } = calculateGridLayout(
+    dates.length,
+    availableWidth,
+    availableHeight
+  );
+
+  const gridWidth = columns * cellSize + (columns - 1) * GAP;
 
   return (
     <View testID={testID} style={styles.container}>
-      {/* Weekday headers */}
-      <View style={styles.headerRow}>
-        {WEEKDAYS.map((day, index) => (
-          <View key={index} style={styles.headerCell}>
-            <Text style={styles.headerText}>{day}</Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Days grid */}
-      <View style={styles.grid}>
-        {/* Empty cells for alignment */}
-        {Array.from({ length: startPadding }).map((_, index) => (
-          <View key={`pad-${index}`} style={styles.cell} />
-        ))}
-
-        {/* Day dots */}
+      <View style={[styles.grid, { width: gridWidth, gap: GAP }]}>
         {dates.map((date) => (
-          <View key={date} style={styles.cell}>
-            <DayDot
-              status={getDotStatus(date, entries)}
-              onPress={() => onDayPress(date)}
-              testID={`day-dot-${date}`}
-            />
-          </View>
+          <DayDot
+            key={date}
+            size={cellSize}
+            status={getDotStatus(date, entries)}
+            onPress={() => onDayPress(date)}
+            testID={`day-dot-${date}`}
+          />
         ))}
       </View>
     </View>
@@ -77,30 +106,12 @@ function getDotStatus(
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  headerCell: {
-    flex: 1,
     alignItems: 'center',
-  },
-  headerText: {
-    ...typography.mono2,
-    color: colors.neutralGray300,
-    fontSize: 12,
+    justifyContent: 'center',
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-  },
-  cell: {
-    width: `${100 / COLUMNS}%`,
-    aspectRatio: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });
 

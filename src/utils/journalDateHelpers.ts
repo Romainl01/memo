@@ -82,3 +82,48 @@ export function isPastOrToday(dateStr: string): boolean {
 
   return date.getTime() <= today.getTime();
 }
+
+/**
+ * Returns the previous day's date string
+ */
+export function getPreviousDate(dateStr: string): string {
+  const date = parseDateString(dateStr);
+  date.setDate(date.getDate() - 1);
+  return toDateString(date);
+}
+
+/**
+ * Returns the next day's date string
+ */
+export function getNextDate(dateStr: string): string {
+  const date = parseDateString(dateStr);
+  date.setDate(date.getDate() + 1);
+  return toDateString(date);
+}
+
+/**
+ * Checks if navigation to the next date is allowed (not today)
+ */
+export function canGoToNextDate(dateStr: string): boolean {
+  return !isToday(dateStr);
+}
+
+/**
+ * Checks if navigation to previous date is allowed (not Jan 1 of current year)
+ */
+export function canGoToPreviousDate(dateStr: string): boolean {
+  const year = new Date().getFullYear();
+  return dateStr !== `${year}-01-01`;
+}
+
+/**
+ * Formats a date string as short format: "Wed, Jan 29"
+ */
+export function formatShortDate(dateStr: string): string {
+  const date = parseDateString(dateStr);
+  return date.toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  });
+}
