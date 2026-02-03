@@ -37,6 +37,7 @@ describe('FriendsList', () => {
             frequencyDays: 7,
             lastContactAt: today,
             category: 'friend',
+            notes: '',
             createdAt: new Date().toISOString(),
           },
           {
@@ -47,6 +48,7 @@ describe('FriendsList', () => {
             frequencyDays: 14,
             lastContactAt: today,
             category: 'friend',
+            notes: '',
             createdAt: new Date().toISOString(),
           },
         ],
@@ -83,6 +85,7 @@ describe('FriendsList', () => {
             frequencyDays: 30,
             lastContactAt: daysAgo(5), // 25 days remaining
             category: 'friend',
+            notes: '',
             createdAt: new Date().toISOString(),
           },
           {
@@ -93,6 +96,7 @@ describe('FriendsList', () => {
             frequencyDays: 7,
             lastContactAt: daysAgo(10), // 3 days overdue
             category: 'friend',
+            notes: '',
             createdAt: new Date().toISOString(),
           },
           {
@@ -103,6 +107,7 @@ describe('FriendsList', () => {
             frequencyDays: 14,
             lastContactAt: daysAgo(12), // 2 days remaining
             category: 'friend',
+            notes: '',
             createdAt: new Date().toISOString(),
           },
         ],
@@ -130,6 +135,7 @@ describe('FriendsList', () => {
       birthday: '1990-01-01',
       frequencyDays: 7,
       lastContactAt: today,
+      notes: '',
       createdAt: new Date().toISOString(),
     });
 

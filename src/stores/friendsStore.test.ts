@@ -6,14 +6,15 @@ describe('friendsStore', () => {
     useFriendsStore.setState({ friends: [], selectedCategory: null });
   });
 
-  // Helper to create test friends
-  const createTestFriend = (overrides: Partial<Omit<Friend, 'id' | 'createdAt'>> = {}): Omit<Friend, 'id' | 'createdAt'> => ({
+  // Helper to create test friends (NewFriend type for addFriend)
+  const createTestFriend = (overrides: Partial<Omit<Friend, 'id' | 'createdAt'>> = {}) => ({
     name: 'Test Friend',
     photoUrl: null,
     birthday: '1990-01-01',
     frequencyDays: 7,
     lastContactAt: '2024-01-01',
-    category: 'friend',
+    category: 'friend' as const,
+    notes: '',
     ...overrides,
   });
 
@@ -28,16 +29,14 @@ describe('friendsStore', () => {
     it('should add a friend to the list', () => {
       const { addFriend } = useFriendsStore.getState();
 
-      const newFriend: Omit<Friend, 'id' | 'createdAt'> = {
+      addFriend({
         name: 'John Doe',
         photoUrl: 'https://example.com/photo.jpg',
         birthday: '1992-12-15',
         frequencyDays: 14,
         lastContactAt: '2024-01-10',
         category: 'friend',
-      };
-
-      addFriend(newFriend);
+      });
 
       const { friends } = useFriendsStore.getState();
       expect(friends).toHaveLength(1);
@@ -291,6 +290,226 @@ describe('friendsStore', () => {
 
       const { selectedCategory } = useFriendsStore.getState();
       expect(selectedCategory).toBeNull();
+    });
+  });
+
+  describe('notes field', () => {
+    it('should store notes when adding a friend', () => {
+      const { addFriend } = useFriendsStore.getState();
+
+      addFriend({
+        name: 'Friend With Notes',
+        photoUrl: null,
+        birthday: '1990-01-01',
+        frequencyDays: 7,
+        lastContactAt: '2024-01-01',
+        category: 'friend',
+        notes: 'Met at the coffee shop',
+      });
+
+      const { friends } = useFriendsStore.getState();
+      expect(friends[0].notes).toBe('Met at the coffee shop');
+    });
+
+    it('should default notes to empty string when not provided', () => {
+      const { addFriend } = useFriendsStore.getState();
+
+      addFriend({
+        name: 'Friend Without Notes',
+        photoUrl: null,
+        birthday: '1990-01-01',
+        frequencyDays: 7,
+        lastContactAt: '2024-01-01',
+        category: 'friend',
+      });
+
+      const { friends } = useFriendsStore.getState();
+      expect(friends[0].notes).toBe('');
+    });
+  });
+
+  describe('updateFriendNotes', () => {
+    it('should update notes for an existing friend', () => {
+      const { addFriend, updateFriendNotes } = useFriendsStore.getState();
+
+      addFriend({
+        name: 'Test Friend',
+        photoUrl: null,
+        birthday: '1990-01-01',
+        frequencyDays: 7,
+        lastContactAt: '2024-01-01',
+        category: 'friend',
+      });
+
+      const { friends } = useFriendsStore.getState();
+      const friendId = friends[0].id;
+
+      updateFriendNotes(friendId, 'New notes about this friend');
+
+      const { friends: updatedFriends } = useFriendsStore.getState();
+      expect(updatedFriends[0].notes).toBe('New notes about this friend');
+    });
+
+    it('should allow clearing notes to empty string', () => {
+      const { addFriend, updateFriendNotes } = useFriendsStore.getState();
+
+      addFriend({
+        name: 'Test Friend',
+        photoUrl: null,
+        birthday: '1990-01-01',
+        frequencyDays: 7,
+        lastContactAt: '2024-01-01',
+        category: 'friend',
+        notes: 'Initial notes',
+      });
+
+      const { friends } = useFriendsStore.getState();
+      const friendId = friends[0].id;
+
+      updateFriendNotes(friendId, '');
+
+      const { friends: updatedFriends } = useFriendsStore.getState();
+      expect(updatedFriends[0].notes).toBe('');
+    });
+
+    it('should not affect other friends', () => {
+      const { addFriend, updateFriendNotes } = useFriendsStore.getState();
+
+      addFriend({ name: 'Friend 1', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01', category: 'friend', notes: 'Notes 1' });
+      addFriend({ name: 'Friend 2', photoUrl: null, birthday: '1990-01-01', frequencyDays: 7, lastContactAt: '2024-01-01', category: 'friend', notes: 'Notes 2' });
+
+      const { friends } = useFriendsStore.getState();
+      updateFriendNotes(friends[0].id, 'Updated notes');
+
+      const { friends: updatedFriends } = useFriendsStore.getState();
+      expect(updatedFriends[1].notes).toBe('Notes 2');
+    });
+  });
+
+  describe('updateFriend', () => {
+    it('should update multiple fields at once', () => {
+      const { addFriend, updateFriend } = useFriendsStore.getState();
+
+      addFriend({
+        name: 'Old Name',
+        photoUrl: null,
+        birthday: '1990-01-01',
+        frequencyDays: 7,
+        lastContactAt: '2024-01-01',
+        category: 'friend',
+      });
+
+      const { friends } = useFriendsStore.getState();
+      const friendId = friends[0].id;
+
+      updateFriend(friendId, {
+        name: 'New Name',
+        category: 'family',
+        frequencyDays: 14,
+      });
+
+      const { friends: updatedFriends } = useFriendsStore.getState();
+      expect(updatedFriends[0].name).toBe('New Name');
+      expect(updatedFriends[0].category).toBe('family');
+      expect(updatedFriends[0].frequencyDays).toBe(14);
+      // Unchanged fields should remain
+      expect(updatedFriends[0].birthday).toBe('1990-01-01');
+    });
+
+    it('should preserve id and createdAt', () => {
+      const { addFriend, updateFriend } = useFriendsStore.getState();
+
+      addFriend({
+        name: 'Test Friend',
+        photoUrl: null,
+        birthday: '1990-01-01',
+        frequencyDays: 7,
+        lastContactAt: '2024-01-01',
+        category: 'friend',
+      });
+
+      const { friends } = useFriendsStore.getState();
+      const originalId = friends[0].id;
+      const originalCreatedAt = friends[0].createdAt;
+
+      updateFriend(originalId, { name: 'Updated Name' });
+
+      const { friends: updatedFriends } = useFriendsStore.getState();
+      expect(updatedFriends[0].id).toBe(originalId);
+      expect(updatedFriends[0].createdAt).toBe(originalCreatedAt);
+    });
+  });
+
+  describe('pendingEditFriend', () => {
+    it('should default to null', () => {
+      const { pendingEditFriend } = useFriendsStore.getState();
+      expect(pendingEditFriend).toBeNull();
+    });
+
+    it('should set pending edit friend', () => {
+      const { addFriend, setPendingEditFriend } = useFriendsStore.getState();
+
+      addFriend({
+        name: 'Test Friend',
+        photoUrl: null,
+        birthday: '1990-01-01',
+        frequencyDays: 7,
+        lastContactAt: '2024-01-01',
+        category: 'friend',
+      });
+
+      const { friends } = useFriendsStore.getState();
+      const friend = friends[0];
+
+      setPendingEditFriend(friend);
+
+      const { pendingEditFriend } = useFriendsStore.getState();
+      expect(pendingEditFriend).toEqual(friend);
+    });
+
+    it('should clear pending edit friend', () => {
+      const { addFriend, setPendingEditFriend } = useFriendsStore.getState();
+
+      addFriend({
+        name: 'Test Friend',
+        photoUrl: null,
+        birthday: '1990-01-01',
+        frequencyDays: 7,
+        lastContactAt: '2024-01-01',
+        category: 'friend',
+      });
+
+      const { friends } = useFriendsStore.getState();
+      setPendingEditFriend(friends[0]);
+      setPendingEditFriend(null);
+
+      const { pendingEditFriend } = useFriendsStore.getState();
+      expect(pendingEditFriend).toBeNull();
+    });
+  });
+
+  describe('getFriendById with notes migration', () => {
+    it('should return friend with notes defaulted to empty string if undefined', () => {
+      // Simulate a persisted friend without notes field (migration scenario)
+      useFriendsStore.setState({
+        friends: [{
+          id: 'legacy-friend',
+          name: 'Legacy Friend',
+          photoUrl: null,
+          birthday: '1990-01-01',
+          frequencyDays: 7,
+          lastContactAt: '2024-01-01',
+          category: 'friend',
+          createdAt: '2024-01-01T00:00:00.000Z',
+          // notes field intentionally omitted
+        } as Friend],
+      });
+
+      const { getFriendById } = useFriendsStore.getState();
+      const friend = getFriendById('legacy-friend');
+
+      expect(friend).toBeTruthy();
+      expect(friend?.notes).toBe('');
     });
   });
 });

@@ -1,6 +1,6 @@
 import { View, StyleSheet } from 'react-native';
-import { GlassView } from 'expo-glass-effect';
 
+import { colors } from '@/src/constants/colors';
 import { useJournalStore, JournalEntry } from '@/src/stores/journalStore';
 import { useJournalSettingsStore } from '@/src/stores/journalSettingsStore';
 import { generateYearDates, isToday, isPastOrToday } from '@/src/utils/journalDateHelpers';
@@ -9,8 +9,8 @@ import { DayDot, DayDotStatus } from './DayDot';
 const GAP = 5;
 const MIN_COLUMNS = 14;
 const MAX_COLUMNS = 28;
-const GLASS_PADDING = 16;
-const GLASS_BORDER_RADIUS = 16;
+const CONTAINER_PADDING = 16;
+const CONTAINER_BORDER_RADIUS = 16;
 
 interface YearGridProps {
   year: number;
@@ -55,6 +55,42 @@ function calculateGridLayout(
 }
 
 /**
+ * The inner grid of dots - extracted to ensure consistent rendering
+ */
+interface DotGridProps {
+  dates: string[];
+  cellSize: number;
+  gridWidth: number;
+  entries: Record<string, JournalEntry>;
+  colorScheme: 'A' | 'B' | 'C';
+  onDayPress: (date: string) => void;
+}
+
+function DotGrid({
+  dates,
+  cellSize,
+  gridWidth,
+  entries,
+  colorScheme,
+  onDayPress,
+}: DotGridProps): React.ReactElement {
+  return (
+    <View style={[styles.grid, { width: gridWidth, gap: GAP }]}>
+      {dates.map((date) => (
+        <DayDot
+          key={date}
+          size={cellSize}
+          status={getDotStatus(date, entries)}
+          colorScheme={colorScheme}
+          onPress={() => onDayPress(date)}
+          testID={`day-dot-${date}`}
+        />
+      ))}
+    </View>
+  );
+}
+
+/**
  * A dense grid showing all 365 days of the year as colored dots.
  * Dynamically calculates layout to fit entire year on screen.
  */
@@ -69,9 +105,9 @@ function YearGrid({
   const colorScheme = useJournalSettingsStore((state) => state.colorScheme);
   const dates = generateYearDates(year);
 
-  // Subtract glass padding from available space for grid calculation
-  const innerWidth = availableWidth - GLASS_PADDING * 2;
-  const innerHeight = availableHeight - GLASS_PADDING * 2;
+  // Subtract padding from available space for grid calculation
+  const innerWidth = availableWidth - CONTAINER_PADDING * 2;
+  const innerHeight = availableHeight - CONTAINER_PADDING * 2;
 
   const { columns, cellSize } = calculateGridLayout(
     dates.length,
@@ -83,20 +119,16 @@ function YearGrid({
 
   return (
     <View testID={testID} style={styles.container}>
-      <GlassView style={styles.glassContainer}>
-        <View style={[styles.grid, { width: gridWidth, gap: GAP }]}>
-          {dates.map((date) => (
-            <DayDot
-              key={date}
-              size={cellSize}
-              status={getDotStatus(date, entries)}
-              colorScheme={colorScheme}
-              onPress={() => onDayPress(date)}
-              testID={`day-dot-${date}`}
-            />
-          ))}
-        </View>
-      </GlassView>
+      <View style={styles.gridContainer}>
+        <DotGrid
+          dates={dates}
+          cellSize={cellSize}
+          gridWidth={gridWidth}
+          entries={entries}
+          colorScheme={colorScheme}
+          onDayPress={onDayPress}
+        />
+      </View>
     </View>
   );
 }
@@ -120,9 +152,10 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
   },
-  glassContainer: {
-    padding: GLASS_PADDING,
-    borderRadius: GLASS_BORDER_RADIUS,
+  gridContainer: {
+    padding: CONTAINER_PADDING,
+    borderRadius: CONTAINER_BORDER_RADIUS,
+    backgroundColor: colors.neutralWhite,
     overflow: 'hidden',
   },
   grid: {

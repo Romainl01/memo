@@ -8,12 +8,13 @@ import { SymbolView } from 'expo-symbols';
 import * as Haptics from 'expo-haptics';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { Avatar } from '@/src/components/Avatar';
+import { SheetBackground } from '@/src/components/SheetBackground';
 import { SettingsRow } from '@/src/components/SettingsRow';
 import { BirthdayWheelPicker } from '@/src/components/BirthdayWheelPicker';
 import type { BirthdayValue } from '@/src/components/BirthdayWheelPicker';
 import { GlassMenu } from '@/src/components/GlassMenu';
 import { useFriendsStore, RELATIONSHIP_LABELS } from '@/src/stores/friendsStore';
-import type { FriendCategory } from '@/src/stores/friendsStore';
+import type { FriendCategory, Friend } from '@/src/stores/friendsStore';
 import { useNotificationStateStore } from '@/src/stores/notificationStateStore';
 import { colors } from '@/src/constants/colors';
 import { typography } from '@/src/constants/typography';
@@ -73,14 +74,51 @@ function formatDate(date: Date | null): string {
   });
 }
 
+/**
+ * Parses a stored birthday string (YYYY-MM-DD or MM-DD) back to BirthdayValue
+ */
+function parseBirthdayString(birthday: string): BirthdayValue {
+  const parts = birthday.split('-');
+  if (parts.length === 3) {
+    // YYYY-MM-DD format
+    return {
+      year: parseInt(parts[0], 10),
+      month: parseInt(parts[1], 10) - 1, // 0-indexed
+      day: parseInt(parts[2], 10),
+    };
+  } else {
+    // MM-DD format (no year)
+    return {
+      month: parseInt(parts[0], 10) - 1, // 0-indexed
+      day: parseInt(parts[1], 10),
+      year: undefined,
+    };
+  }
+}
+
+/**
+ * Parses a stored lastContactAt string (YYYY-MM-DD) back to Date
+ */
+function parseLastContactAt(dateString: string): Date {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
 export default function AddFriendScreen(): React.ReactElement {
   const insets = useSafeAreaInsets();
   const pendingContact = useFriendsStore((state) => state.pendingContact);
   const setPendingContact = useFriendsStore((state) => state.setPendingContact);
+  const pendingEditFriend = useFriendsStore((state) => state.pendingEditFriend);
+  const setPendingEditFriend = useFriendsStore((state) => state.setPendingEditFriend);
   const addFriend = useFriendsStore((state) => state.addFriend);
+  const updateFriend = useFriendsStore((state) => state.updateFriend);
   const friendsCount = useFriendsStore((state) => state.friends.length);
 
   const { hasRequestedPermission, setHasRequestedPermission, setPendingPermissionRequest } = useNotificationStateStore();
+
+  // Determine if we're in edit mode
+  const isEditMode = pendingEditFriend !== null;
+  const editingFriend = pendingEditFriend;
 
   // Form state
   const [birthday, setBirthday] = useState<BirthdayValue | null>(null);
@@ -96,56 +134,83 @@ export default function AddFriendScreen(): React.ReactElement {
   const [showCategoryMenu, setShowCategoryMenu] = useState(false);
   const [showFrequencyMenu, setShowFrequencyMenu] = useState(false);
 
-  // Pre-fill birthday from contact if available
+  // Pre-fill form in edit mode or birthday from contact in add mode
   useEffect(() => {
-    if (pendingContact?.birthday) {
+    if (isEditMode && editingFriend) {
+      // Edit mode: pre-fill all fields from existing friend
+      setBirthday(parseBirthdayString(editingFriend.birthday));
+      setLastCatchUp(parseLastContactAt(editingFriend.lastContactAt));
+      setFrequency(editingFriend.frequencyDays as FrequencyOption);
+      setCategory(editingFriend.category);
+    } else if (pendingContact?.birthday) {
+      // Add mode: pre-fill birthday from contact if available
       setBirthday(pendingContact.birthday);
     }
-  }, [pendingContact]);
+  }, [isEditMode, editingFriend, pendingContact]);
 
   const isFormValid = birthday !== null && lastCatchUp !== null && frequency !== null;
 
   const handleSave = useCallback(() => {
-    if (!pendingContact || !isFormValid) return;
+    if (!isFormValid) return;
 
-    // Check if this is the first friend (before adding)
-    const isFirstFriend = friendsCount === 0;
+    // In add mode, we need a pending contact
+    if (!isEditMode && !pendingContact) return;
+
+    // Check if this is the first friend (before adding) - only relevant for add mode
+    const isFirstFriend = !isEditMode && friendsCount === 0;
 
     // Success haptic feedback
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
     // Format birthday as YYYY-MM-DD (with year) or MM-DD (without year)
-    const mm = String(birthday.month + 1).padStart(2, '0');
-    const dd = String(birthday.day).padStart(2, '0');
-    const birthdayString = birthday.year
-      ? `${birthday.year}-${mm}-${dd}`
+    const mm = String(birthday!.month + 1).padStart(2, '0');
+    const dd = String(birthday!.day).padStart(2, '0');
+    const birthdayString = birthday!.year
+      ? `${birthday!.year}-${mm}-${dd}`
       : `${mm}-${dd}`;
 
-    addFriend({
-      name: pendingContact.name,
-      photoUrl: pendingContact.imageUri,
-      birthday: birthdayString,
-      frequencyDays: frequency!,
-      lastContactAt: lastCatchUp!.toISOString().split('T')[0],
-      category,
-    });
+    if (isEditMode && editingFriend) {
+      // Edit mode: update existing friend
+      updateFriend(editingFriend.id, {
+        birthday: birthdayString,
+        frequencyDays: frequency!,
+        lastContactAt: lastCatchUp!.toISOString().split('T')[0],
+        category,
+      });
+      setPendingEditFriend(null);
+    } else if (pendingContact) {
+      // Add mode: create new friend
+      addFriend({
+        name: pendingContact.name,
+        photoUrl: pendingContact.imageUri,
+        birthday: birthdayString,
+        frequencyDays: frequency!,
+        lastContactAt: lastCatchUp!.toISOString().split('T')[0],
+        category,
+      });
 
-    // Schedule notification permission request after sheet closes (first friend only)
-    if (isFirstFriend && !hasRequestedPermission) {
-      setHasRequestedPermission(true);
-      setPendingPermissionRequest(true);
+      // Schedule notification permission request after sheet closes (first friend only)
+      if (isFirstFriend && !hasRequestedPermission) {
+        setHasRequestedPermission(true);
+        setPendingPermissionRequest(true);
+      }
+
+      setPendingContact(null);
     }
 
-    setPendingContact(null);
     router.back();
   }, [
+    isEditMode,
+    editingFriend,
     pendingContact,
     birthday,
     lastCatchUp,
     frequency,
     category,
     addFriend,
+    updateFriend,
     setPendingContact,
+    setPendingEditFriend,
     friendsCount,
     hasRequestedPermission,
     setHasRequestedPermission,
@@ -165,7 +230,8 @@ export default function AddFriendScreen(): React.ReactElement {
     setShowLastCatchUpPicker(false);
   }, []);
 
-  if (!pendingContact) {
+  // In add mode we need a pending contact, in edit mode we need a pending edit friend
+  if (!isEditMode && !pendingContact) {
     return (
       <View>
         <Text style={styles.emptyText}>No contact selected</Text>
@@ -173,14 +239,19 @@ export default function AddFriendScreen(): React.ReactElement {
     );
   }
 
+  // Get display data from either edit friend or pending contact
+  const displayName = isEditMode ? editingFriend!.name : pendingContact!.name;
+  const displayPhotoUrl = isEditMode ? editingFriend!.photoUrl : pendingContact!.imageUri;
+
   const birthdayDisplayValue = formatBirthdayValue(birthday);
   const lastCatchUpDisplayValue = formatDate(lastCatchUp);
   const frequencyDisplayValue = frequency ? FREQUENCY_LABELS[frequency] : 'None';
 
   return (
-    <View style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
-      {/* Header with save button */}
-      <View style={styles.header}>
+    <SheetBackground>
+      <View style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
+        {/* Header with save button */}
+        <View style={styles.header}>
         <View style={styles.headerSpacer} />
         <Pressable
           onPress={handleSave}
@@ -206,11 +277,11 @@ export default function AddFriendScreen(): React.ReactElement {
       {/* Contact info */}
       <View style={styles.contactSection}>
         <Avatar
-          name={pendingContact.name}
-          imageUri={pendingContact.imageUri ?? undefined}
+          name={displayName}
+          imageUri={displayPhotoUrl ?? undefined}
           size={72}
         />
-        <Text style={styles.contactName}>{pendingContact.name}</Text>
+        <Text style={styles.contactName}>{displayName}</Text>
       </View>
 
       {/* Settings rows */}
@@ -346,7 +417,8 @@ export default function AddFriendScreen(): React.ReactElement {
         )}
         customCancelButtonIOS={EmptyCancelButton}
       />
-    </View>
+      </View>
+    </SheetBackground>
   );
 }
 

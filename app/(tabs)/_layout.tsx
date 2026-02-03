@@ -7,6 +7,8 @@ export const unstable_settings = {
 
 /**
  * Native tab navigator using iOS Liquid Glass effect.
+ * Note: In Expo Go, liquid glass on NativeTabs can be flaky.
+ * For reliable glass effects, use a development build (npx expo run:ios).
  */
 export default function TabLayout() {
   return (

@@ -156,4 +156,75 @@ describe('useAutoSave', () => {
 
     expect(saveFn).not.toHaveBeenCalled();
   });
+
+  describe('allowEmpty option', () => {
+    it('should save empty content when allowEmpty is true', async () => {
+      const saveFn = jest.fn();
+      renderHook(() =>
+        useAutoSave({
+          content: '',
+          onSave: saveFn,
+          debounceMs: 500,
+          allowEmpty: true,
+        })
+      );
+
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+
+      await waitFor(() => {
+        expect(saveFn).toHaveBeenCalledWith('');
+      });
+    });
+
+    it('should not save empty content when allowEmpty is false (default)', async () => {
+      const saveFn = jest.fn();
+      renderHook(() =>
+        useAutoSave({
+          content: '',
+          onSave: saveFn,
+          debounceMs: 500,
+          allowEmpty: false,
+        })
+      );
+
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+
+      expect(saveFn).not.toHaveBeenCalled();
+    });
+
+    it('should save when content changes from text to empty with allowEmpty', async () => {
+      const saveFn = jest.fn();
+      const { rerender } = renderHook(
+        ({ content }: { content: string }) =>
+          useAutoSave({
+            content,
+            onSave: saveFn,
+            debounceMs: 500,
+            allowEmpty: true,
+          }),
+        { initialProps: { content: 'some notes' } }
+      );
+
+      // First save with content
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+      expect(saveFn).toHaveBeenCalledWith('some notes');
+
+      // Clear content
+      rerender({ content: '' });
+
+      act(() => {
+        jest.advanceTimersByTime(500);
+      });
+
+      await waitFor(() => {
+        expect(saveFn).toHaveBeenCalledWith('');
+      });
+    });
+  });
 });

@@ -42,8 +42,8 @@ function DayDot({
   // Base dot is 60% of cell size
   const baseDotSize = Math.max(4, size * 0.6);
 
-  // Ring border width scales with dot size
-  const ringWidth = Math.max(1.5, baseDotSize * 0.15);
+  // Ring border width scales with dot size (22% for thick, visible ring)
+  const ringWidth = Math.max(2, baseDotSize * 0.22);
 
   // Today's dot is larger: we increase the inner dot so that
   // dot + ring is approximately 1.3x the normal dot size.

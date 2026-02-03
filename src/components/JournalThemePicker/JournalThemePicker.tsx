@@ -11,9 +11,9 @@ interface JournalThemePickerProps {
 }
 
 const schemeLabels: Record<JournalColorScheme, string> = {
-  A: 'Warm',
-  B: 'Pastel',
-  C: 'Contrast',
+  A: 'Terra',
+  B: 'Ocean',
+  C: 'Forest',
 };
 
 /**

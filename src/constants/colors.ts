@@ -34,32 +34,32 @@ export type ColorToken = keyof typeof colors;
 /**
  * Journal dot grid color schemes
  * Each scheme provides distinct colors for all 4 dot states:
- * - filled: Days with entries (warm, positive)
- * - pastEmpty: Past days without entries (muted, not alarming)
+ * - filled: Days with entries (bold, saturated)
+ * - pastEmpty: Past days without entries (lighter for contrast)
  * - future: Future days (subtle, barely visible)
  * - todayRing: Ring around today's dot (contrasting accent)
  */
 export const journalColorSchemes = {
-  /** Terracotta & Sage - Rich, earthy, Mediterranean feel */
+  /** Terra - Rich, earthy, Mediterranean feel */
   A: {
-    filled: '#C75B39',      // Deep Terracotta
-    pastEmpty: '#C4B8A8',   // Warm Clay
+    filled: '#B84422',      // Deep Terracotta (more saturated)
+    pastEmpty: '#C9BDB0',   // Warm Clay (lighter for contrast)
     future: '#E8E2D9',      // Soft Sand
-    todayRing: '#7A9E7E',   // Sage Green
+    todayRing: '#5B8A60',   // Sage Green (more saturated)
   },
-  /** Ocean & Amber - Coastal, warm sunset vibes */
+  /** Ocean - Coastal, warm sunset vibes */
   B: {
-    filled: '#2A7B7B',      // Deep Teal
-    pastEmpty: '#D4C4A8',   // Warm Sand
+    filled: '#1A6B6B',      // Deep Teal (more saturated)
+    pastEmpty: '#D8CBAF',   // Warm Sand (lighter for contrast)
     future: '#EAE4D8',      // Pale Dune
-    todayRing: '#D4943A',   // Amber Gold
+    todayRing: '#CC8020',   // Amber Gold (richer)
   },
-  /** Forest & Copper - Deep, rich, autumnal */
+  /** Forest - Deep, rich, autumnal */
   C: {
-    filled: '#3D6B4F',      // Forest Green
-    pastEmpty: '#BFB5A3',   // Warm Stone
+    filled: '#2D5A3F',      // Forest Green (deeper)
+    pastEmpty: '#C5BAA8',   // Warm Stone (lighter for contrast)
     future: '#E5E2D8',      // Pale Moss
-    todayRing: '#B87333',   // Burnished Copper
+    todayRing: '#A86525',   // Burnished Copper (deeper)
   },
 } as const;
 

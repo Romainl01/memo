@@ -20,6 +20,7 @@ describe('FriendCard', () => {
     frequencyDays: 14,
     lastContactAt: toLocalDateString(new Date()), // Today
     category: 'friend',
+    notes: '',
     createdAt: new Date().toISOString(),
   };
 

@@ -21,20 +21,27 @@ export interface Friend {
   frequencyDays: number;
   lastContactAt: string; // ISO date string (YYYY-MM-DD)
   category: FriendCategory;
+  notes: string;
   createdAt: string; // ISO timestamp
 }
 
-export type NewFriend = Omit<Friend, 'id' | 'createdAt'>;
+export type NewFriend = Omit<Friend, 'id' | 'createdAt' | 'notes'> & { notes?: string };
+
+export type FriendUpdates = Partial<Omit<Friend, 'id' | 'createdAt'>>;
 
 interface FriendsState {
   friends: Friend[];
   pendingContact: SelectedContact | null;
+  pendingEditFriend: Friend | null;
   selectedCategory: FriendCategory | null;
   addFriend: (friend: NewFriend) => void;
   removeFriend: (id: string) => void;
   hasFriend: (name: string) => boolean;
   getFriendById: (id: string) => Friend | undefined;
   setPendingContact: (contact: SelectedContact | null) => void;
+  setPendingEditFriend: (friend: Friend | null) => void;
+  updateFriendNotes: (id: string, notes: string) => void;
+  updateFriend: (id: string, updates: FriendUpdates) => void;
   logCatchUp: (friendId: string) => string | undefined;
   undoCatchUp: (friendId: string, previousLastContactAt: string) => void;
   setSelectedCategory: (category: FriendCategory | null) => void;
@@ -53,15 +60,21 @@ export const useFriendsStore = create<FriendsState>()(
     (set, get) => ({
       friends: [],
       pendingContact: null,
+      pendingEditFriend: null,
       selectedCategory: null,
 
       setPendingContact: (contact) => {
         set({ pendingContact: contact });
       },
 
+      setPendingEditFriend: (friend) => {
+        set({ pendingEditFriend: friend });
+      },
+
       addFriend: (newFriend) => {
         const friend: Friend = {
           ...newFriend,
+          notes: newFriend.notes ?? '',
           id: generateId(),
           createdAt: new Date().toISOString(),
         };
@@ -85,7 +98,27 @@ export const useFriendsStore = create<FriendsState>()(
 
       getFriendById: (id) => {
         const { friends } = get();
-        return friends.find((friend) => friend.id === id);
+        const friend = friends.find((f) => f.id === id);
+        if (friend && friend.notes === undefined) {
+          return { ...friend, notes: '' };
+        }
+        return friend;
+      },
+
+      updateFriendNotes: (id, notes) => {
+        set((state) => ({
+          friends: state.friends.map((f) =>
+            f.id === id ? { ...f, notes } : f
+          ),
+        }));
+      },
+
+      updateFriend: (id, updates) => {
+        set((state) => ({
+          friends: state.friends.map((f) =>
+            f.id === id ? { ...f, ...updates } : f
+          ),
+        }));
       },
 
       logCatchUp: (friendId) => {

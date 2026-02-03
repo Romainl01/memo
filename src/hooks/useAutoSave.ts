@@ -4,6 +4,8 @@ interface UseAutoSaveOptions {
   content: string;
   onSave: (content: string) => void;
   debounceMs?: number;
+  /** When true, allows saving empty content (useful for clearing notes) */
+  allowEmpty?: boolean;
 }
 
 interface UseAutoSaveReturn {
@@ -22,6 +24,7 @@ export function useAutoSave({
   content,
   onSave,
   debounceMs = 500,
+  allowEmpty = false,
 }: UseAutoSaveOptions): UseAutoSaveReturn {
   const [isSaving, setIsSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
@@ -40,8 +43,8 @@ export function useAutoSave({
   const performSave = useCallback(() => {
     const currentContent = contentRef.current;
 
-    // Don't save empty or whitespace-only content
-    if (!currentContent.trim()) {
+    // Don't save empty or whitespace-only content (unless allowEmpty is true)
+    if (!allowEmpty && !currentContent.trim()) {
       return;
     }
 
@@ -57,7 +60,7 @@ export function useAutoSave({
     justSavedTimerRef.current = setTimeout(() => {
       setJustSaved(false);
     }, JUST_SAVED_DURATION_MS);
-  }, [onSave]);
+  }, [onSave, allowEmpty]);
 
   // Debounce content changes and save after delay
   useEffect(() => {

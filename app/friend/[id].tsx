@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FriendDetailSheet } from '@/src/features/friends';
+import { SheetBackground } from '@/src/components/SheetBackground';
 import { useFriendsStore } from '@/src/stores/friendsStore';
 import { colors } from '@/src/constants/colors';
 import { typography } from '@/src/constants/typography';
@@ -53,13 +54,15 @@ export default function FriendDetailScreen(): React.ReactElement {
   }
 
   return (
-    <View style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
-      <FriendDetailSheet
-        friend={friend}
-        onEdit={handleEdit}
-        onNotesChange={handleNotesChange}
-      />
-    </View>
+    <SheetBackground>
+      <View style={{ paddingBottom: Math.max(insets.bottom, 16) }}>
+        <FriendDetailSheet
+          friend={friend}
+          onEdit={handleEdit}
+          onNotesChange={handleNotesChange}
+        />
+      </View>
+    </SheetBackground>
   );
 }
 

@@ -8,7 +8,7 @@ import { EmptyFriendsScreen, FriendsList } from '@/src/features/friends';
 import { GlassButton } from '@/src/components/GlassButton';
 import { CategoryFilterButton } from '@/src/components/CategoryFilterButton';
 import { useContacts } from '@/src/hooks/useContacts';
-import { useFriendsStore } from '@/src/stores/friendsStore';
+import { useFriendsStore, Friend } from '@/src/stores/friendsStore';
 import { colors } from '@/src/constants/colors';
 import { typography } from '@/src/constants/typography';
 
@@ -59,6 +59,10 @@ export default function FriendsScreen(): React.ReactElement {
     router.push('/add-friend');
   }, [pickContact, isPicking, permissionStatus, hasFriend, setPendingContact]);
 
+  const handleFriendPress = useCallback((friend: Friend) => {
+    router.push(`/friend/${friend.id}`);
+  }, []);
+
   const hasFriends = friends.length > 0;
 
   if (!hasFriends) {
@@ -85,7 +89,10 @@ export default function FriendsScreen(): React.ReactElement {
         </View>
 
         <View style={styles.listContainer}>
-          <FriendsList onAddFriend={handleAddFriend} />
+          <FriendsList
+            onFriendPress={handleFriendPress}
+            onAddFriend={handleAddFriend}
+          />
         </View>
       </View>
 

@@ -127,6 +127,16 @@ export default function RootLayout(): React.ReactElement | null {
                 gestureEnabled: false, // We handle gestures ourselves for swipe navigation
               }}
             />
+            <Stack.Screen
+              name="friend/[id]"
+              options={{
+                presentation: 'formSheet',
+                sheetAllowedDetents: 'fitToContents',
+                sheetGrabberVisible: true,
+                headerShown: false,
+                contentStyle: { backgroundColor: 'transparent' },
+              }}
+            />
           </Stack>
         </ToastProvider>
       </SafeAreaProvider>
