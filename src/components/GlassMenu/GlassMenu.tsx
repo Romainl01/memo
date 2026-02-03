@@ -1,6 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet, Animated, Platform } from 'react-native';
-import { GlassView } from 'expo-glass-effect';
 import { SymbolView } from 'expo-symbols';
 import * as Haptics from 'expo-haptics';
 import { colors } from '@/src/constants/colors';
@@ -33,6 +32,19 @@ const MENU_BORDER_RADIUS = 16;
 const ITEM_HEIGHT = 48;
 const MENU_PADDING_VERTICAL = 6;
 const MENU_WIDTH = 160;
+
+function getDirectionStyles(
+  direction: 'up' | 'down',
+  alignment: 'left' | 'right'
+): { top?: `${number}%`; bottom?: `${number}%`; marginTop?: number; marginBottom?: number; transformOrigin: string } {
+  const verticalOrigin = direction === 'down' ? 'top' : 'bottom';
+  const transformOrigin = `${verticalOrigin} ${alignment}`;
+
+  if (direction === 'down') {
+    return { top: '100%', marginTop: 4, transformOrigin };
+  }
+  return { bottom: '100%', marginBottom: 4, transformOrigin };
+}
 
 export function GlassMenu<T>({
   visible,
@@ -111,9 +123,7 @@ export function GlassMenu<T>({
         style={[
           styles.menuWrapper,
           alignment === 'left' ? { left: 0 } : { right: 0 },
-          direction === 'down'
-            ? { top: '100%', marginTop: 4, transformOrigin: alignment === 'left' ? 'top left' : 'top right' }
-            : { bottom: '100%', marginBottom: 4, transformOrigin: alignment === 'left' ? 'bottom left' : 'bottom right' },
+          getDirectionStyles(direction, alignment),
           {
             opacity: opacityAnim,
             transform: [{ scale: scaleAnim }],
@@ -121,11 +131,9 @@ export function GlassMenu<T>({
         ]}
         testID={testID}
       >
+        {/* Inner Pressable prevents taps from bubbling to backdrop */}
         <Pressable>
-          <GlassView
-            style={styles.menuContainer}
-            tintColor="rgba(120, 120, 128, 0.2)"
-          >
+          <View style={styles.menuContainer}>
             {items.map((item, index) => {
               const isSelected = selectedValue === item.value;
               const isLast = index === items.length - 1;
@@ -160,7 +168,7 @@ export function GlassMenu<T>({
                 </Pressable>
               );
             })}
-          </GlassView>
+          </View>
         </Pressable>
       </Animated.View>
     </>
@@ -186,8 +194,7 @@ const styles = StyleSheet.create({
     borderRadius: MENU_BORDER_RADIUS,
     overflow: 'hidden',
     paddingVertical: MENU_PADDING_VERTICAL,
-    // Fallback background for non-iOS 26 (GlassView renders as plain View)
-    backgroundColor: 'rgba(242, 242, 247, 0.95)',
+    backgroundColor: colors.neutralWhite,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
