@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { View, Text, StyleSheet, Alert } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
@@ -15,7 +16,8 @@ import { typography } from '@/src/constants/typography';
  * Friends tab - shows list of friends or empty state
  * Handles the add friend flow: native contact picker → modal sheet
  */
-// Standard iOS tab bar height (49px) + safe area bottom inset
+
+/** Standard iOS tab bar height - combined with safe area inset for FAB positioning */
 const TAB_BAR_HEIGHT = 49;
 
 export default function FriendsScreen(): React.ReactElement {
@@ -69,6 +71,11 @@ export default function FriendsScreen(): React.ReactElement {
 
   return (
     <View style={styles.root}>
+      <LinearGradient
+        colors={[colors.primaryGradientStart, colors.surfaceLight]}
+        style={styles.gradient}
+        locations={[0, 0.85]}
+      />
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
           <Text style={styles.title}>Pia</Text>
@@ -108,10 +115,17 @@ export default function FriendsScreen(): React.ReactElement {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: colors.surfaceLight,
+  },
+  gradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '45%',
   },
   container: {
     flex: 1,
-    backgroundColor: colors.surfaceLight,
   },
   header: {
     paddingVertical: 16,

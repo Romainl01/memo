@@ -7,6 +7,8 @@ export const colors = {
   // Primary
   primary: '#F28C59',
   primary200: '#C9A961',
+  primaryLight: '#FDEBE3',
+  primaryGradientStart: '#FFCAB0',
 
   // Neutral
   neutralDark: '#262629',
