@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable } from 'react-native';
 import { GlassView } from 'expo-glass-effect';
 import { SymbolView } from 'expo-symbols';
+import * as Haptics from 'expo-haptics';
 import { Avatar } from '@/src/components/Avatar';
 import { useAutoSave } from '@/src/hooks/useAutoSave';
 import type { Friend } from '@/src/stores/friendsStore';
@@ -13,12 +14,14 @@ const BUTTON_SIZE = 44;
 interface FriendDetailSheetProps {
   friend: Friend;
   onEdit: () => void;
+  onClose: () => void;
   onNotesChange: (notes: string) => void;
 }
 
 function FriendDetailSheet({
   friend,
   onEdit,
+  onClose,
   onNotesChange,
 }: FriendDetailSheetProps): React.ReactElement {
   const [notes, setNotes] = useState(friend.notes);
@@ -30,16 +33,38 @@ function FriendDetailSheet({
     allowEmpty: true,
   });
 
+  const handleClose = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onClose();
+  }, [onClose]);
+
   return (
     <View style={styles.container}>
-      {/* Header with edit button */}
+      {/* Header with edit and done buttons */}
       <View style={styles.header}>
-        <View style={styles.headerSpacer} />
+        {/* Edit button - left side, neutral */}
         <Pressable
           onPress={onEdit}
           accessibilityLabel="Edit friend details"
           accessibilityRole="button"
           testID="edit-button"
+        >
+          <GlassView style={styles.glassButton} glassEffectStyle="clear">
+            <SymbolView
+              name="pencil"
+              size={18}
+              weight="semibold"
+              tintColor={colors.neutralDark}
+            />
+          </GlassView>
+        </Pressable>
+
+        {/* Done button - right side, primary style, closes sheet */}
+        <Pressable
+          onPress={handleClose}
+          accessibilityLabel="Done"
+          accessibilityRole="button"
+          testID="done-button"
         >
           <GlassView
             style={styles.glassButton}
@@ -47,7 +72,7 @@ function FriendDetailSheet({
             glassEffectStyle="clear"
           >
             <SymbolView
-              name="pencil"
+              name="checkmark"
               size={18}
               weight="semibold"
               tintColor={colors.neutralWhite}
@@ -95,9 +120,6 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingHorizontal: 16,
   },
-  headerSpacer: {
-    width: BUTTON_SIZE,
-  },
   glassButton: {
     width: BUTTON_SIZE,
     height: BUTTON_SIZE,
@@ -123,13 +145,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderRadius: 16,
     padding: 16,
-    minHeight: 120,
+    minHeight: 180,
   },
   notesInput: {
-    ...typography.body1,
+    ...typography.mono1,
     color: colors.neutralDark,
     flex: 1,
-    minHeight: 80,
+    minHeight: 140,
     padding: 0,
   },
 });

@@ -59,6 +59,7 @@ export default function FriendDetailScreen(): React.ReactElement {
         <FriendDetailSheet
           friend={friend}
           onEdit={handleEdit}
+          onClose={router.back}
           onNotesChange={handleNotesChange}
         />
       </View>

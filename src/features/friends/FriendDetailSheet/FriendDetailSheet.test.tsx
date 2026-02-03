@@ -27,6 +27,7 @@ describe('FriendDetailSheet', () => {
   const defaultProps = {
     friend: mockFriend,
     onEdit: jest.fn(),
+    onClose: jest.fn(),
     onNotesChange: jest.fn(),
   };
 
@@ -70,5 +71,21 @@ describe('FriendDetailSheet', () => {
   it('should have accessible edit button', () => {
     const { getByLabelText } = render(<FriendDetailSheet {...defaultProps} />);
     expect(getByLabelText('Edit friend details')).toBeTruthy();
+  });
+
+  it('should call onClose when done button is pressed', () => {
+    const onClose = jest.fn();
+    const { getByTestId } = render(
+      <FriendDetailSheet {...defaultProps} onClose={onClose} />
+    );
+
+    fireEvent.press(getByTestId('done-button'));
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('should have accessible done button', () => {
+    const { getByLabelText } = render(<FriendDetailSheet {...defaultProps} />);
+    expect(getByLabelText('Done')).toBeTruthy();
   });
 });
