@@ -4,9 +4,9 @@ import { BlurView } from 'expo-blur';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withTiming,
   runOnJS,
+  Easing,
 } from 'react-native-reanimated';
 import { SymbolView } from 'expo-symbols';
 import * as Haptics from 'expo-haptics';
@@ -34,8 +34,6 @@ interface GlassMenuProps<T> {
   alignment?: 'left' | 'right';
   /** Test ID for the menu container */
   testID?: string;
-  /** Touch point for scale animation origin (relative to trigger element) */
-  anchorPoint?: { x: number; y: number };
 }
 
 const MENU_BORDER_RADIUS = 16;
@@ -43,43 +41,48 @@ const ITEM_HEIGHT = 48;
 const MENU_PADDING_VERTICAL = 6;
 const MENU_WIDTH = 160;
 
-// Animation constants
-const SCALE_START = 0.85;
-const SPRING_CONFIG = { damping: 15, stiffness: 150 };
-const CLOSE_DURATION = 100;
+// Animation constants - smooth expansion from anchor point
+const SCALE_START = 0.01; // Near-zero for dramatic expansion effect
+const OPEN_DURATION = 350; // Deliberate, noticeable expansion
+const CLOSE_DURATION = 280; // Smooth close
+const EASING_OUT = Easing.out(Easing.cubic); // Smooth deceleration, no bounce
 
 const DIRECTION_STYLES = {
   down: { top: '100%' as const, marginTop: 4 },
   up: { bottom: '100%' as const, marginBottom: 4 },
 } as const;
 
-function getDirectionStyles(direction: 'up' | 'down') {
-  return DIRECTION_STYLES[direction];
-}
-
 /**
- * Calculate the transform origin offset for scale animation from anchor point.
- * When no anchorPoint is provided, uses corner-based origin (0 or MENU_WIDTH).
+ * Calculate the transform origin offset for scale animation.
+ * Uses the translate-scale-translate pattern from react-native-anchor-point.
+ *
+ * The menu expands from the corner nearest to the trigger:
+ * - direction='down' + alignment='right' → top-right corner
+ * - direction='down' + alignment='left'  → top-left corner
+ * - direction='up'   + alignment='right' → bottom-right corner
+ * - direction='up'   + alignment='left'  → bottom-left corner
+ *
+ * Formula: offset = center - anchor (NOT anchor - center!)
+ * This matches the react-native-anchor-point library implementation.
  */
 function getAnchorOffset(
-  anchorPoint: { x: number; y: number } | undefined,
   direction: 'up' | 'down',
   alignment: 'left' | 'right',
   menuHeight: number
 ): { offsetX: number; offsetY: number } {
-  if (anchorPoint) {
-    // Use touch point as origin
-    // Clamp X within menu width for predictable behavior
-    const offsetX = Math.min(Math.max(anchorPoint.x, 0), MENU_WIDTH);
-    // For Y, use the edge closest to the trigger
-    const offsetY = direction === 'down' ? 0 : menuHeight;
-    return { offsetX, offsetY };
-  }
+  const centerX = MENU_WIDTH / 2;
+  const centerY = menuHeight / 2;
 
-  // Fallback to corner-based origin
-  const offsetX = alignment === 'left' ? 0 : MENU_WIDTH;
-  const offsetY = direction === 'down' ? 0 : menuHeight;
-  return { offsetX, offsetY };
+  // Anchor at corner nearest to trigger
+  const anchorX = alignment === 'left' ? 0 : MENU_WIDTH;
+  const anchorY = direction === 'down' ? 0 : menuHeight;
+
+  // CRITICAL: offset = center - anchor (not anchor - center)
+  // This matches the react-native-anchor-point library formula
+  return {
+    offsetX: centerX - anchorX,
+    offsetY: centerY - anchorY,
+  };
 }
 
 export function GlassMenu<T>({
@@ -91,7 +94,6 @@ export function GlassMenu<T>({
   direction = 'up',
   alignment = 'right',
   testID,
-  anchorPoint,
 }: GlassMenuProps<T>): React.ReactElement | null {
   const { colors, isDark } = useTheme();
 
@@ -101,24 +103,22 @@ export function GlassMenu<T>({
 
   // Calculate menu height for transform origin
   const menuHeight = items.length * ITEM_HEIGHT + MENU_PADDING_VERTICAL * 2;
-  const { offsetX, offsetY } = getAnchorOffset(anchorPoint, direction, alignment, menuHeight);
+  const { offsetX, offsetY } = getAnchorOffset(direction, alignment, menuHeight);
 
   useEffect(() => {
     if (visible) {
-      // Animate in with spring for scale, timing for opacity
-      scale.value = withSpring(1, SPRING_CONFIG);
-      opacity.value = withTiming(1, { duration: 150 });
-    } else {
-      // Reset for next open
+      // Reset to initial state before animating (ensures clean start on every open)
       scale.value = SCALE_START;
       opacity.value = 0;
+
+      scale.value = withTiming(1, { duration: OPEN_DURATION, easing: EASING_OUT });
+      opacity.value = withTiming(1, { duration: OPEN_DURATION, easing: EASING_OUT });
     }
   }, [visible, scale, opacity]);
 
   const handleClose = useCallback(() => {
-    // Animate out then call onClose
-    scale.value = withTiming(SCALE_START, { duration: CLOSE_DURATION });
-    opacity.value = withTiming(0, { duration: CLOSE_DURATION }, (finished) => {
+    scale.value = withTiming(SCALE_START, { duration: CLOSE_DURATION, easing: EASING_OUT });
+    opacity.value = withTiming(0, { duration: CLOSE_DURATION, easing: EASING_OUT }, (finished) => {
       'worklet';
       if (finished) {
         runOnJS(onClose)();
@@ -135,23 +135,17 @@ export function GlassMenu<T>({
     [onSelect, handleClose]
   );
 
-  // Animated style with scale-from-anchor-point using translate-scale-translate pattern
-  const animatedStyle = useAnimatedStyle(() => {
-    const currentScale = scale.value;
-    return {
-      opacity: opacity.value,
-      transform: [
-        // Move origin to anchor point
-        { translateX: offsetX },
-        { translateY: offsetY },
-        // Scale
-        { scale: currentScale },
-        // Move back, accounting for scale
-        { translateX: -offsetX },
-        { translateY: -offsetY },
-      ],
-    };
-  });
+  // Scale from anchor point using translate-scale-translate pattern
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [
+      { translateX: -offsetX },
+      { translateY: -offsetY },
+      { scale: scale.value },
+      { translateX: offsetX },
+      { translateY: offsetY },
+    ],
+  }));
 
   if (!visible) {
     return null;
@@ -167,52 +161,55 @@ export function GlassMenu<T>({
         style={[
           styles.menuWrapper,
           alignment === 'left' ? { left: 0 } : { right: 0 },
-          getDirectionStyles(direction),
+          DIRECTION_STYLES[direction],
           animatedStyle,
         ]}
         testID={testID}
       >
         {/* Inner Pressable prevents taps from bubbling to backdrop */}
         <Pressable>
-          <BlurView
-            tint={isDark ? 'dark' : 'extraLight'}
-            intensity={80}
-            style={styles.menuContainer}
-          >
-            {items.map((item) => {
-              const isSelected = selectedValue === item.value;
+          {/* Separate clipping layer - clips BlurView to rounded corners without clipping shadow */}
+          <View style={styles.menuClip}>
+            <BlurView
+              tint={isDark ? 'dark' : 'extraLight'}
+              intensity={80}
+              style={styles.menuContainer}
+            >
+              {items.map((item) => {
+                const isSelected = selectedValue === item.value;
 
-              return (
-                <Pressable
-                  key={String(item.value)}
-                  style={({ pressed }) => [
-                    styles.menuItem,
-                    pressed && { backgroundColor: colors.menuItemPressed },
-                  ]}
-                  onPress={() => handleSelect(item.value)}
-                  testID={`${testID}-item-${item.value}`}
-                >
-                  <Text
-                    style={[
-                      styles.menuItemText,
-                      { color: colors.neutralDark },
-                      isSelected && { fontFamily: 'Inter_500Medium', color: colors.primary },
+                return (
+                  <Pressable
+                    key={String(item.value)}
+                    style={({ pressed }) => [
+                      styles.menuItem,
+                      pressed && { backgroundColor: colors.menuItemPressed },
                     ]}
+                    onPress={() => handleSelect(item.value)}
+                    testID={`${testID}-item-${item.value}`}
                   >
-                    {item.label}
-                  </Text>
-                  {isSelected && (
-                    <SymbolView
-                      name="checkmark"
-                      size={18}
-                      weight="semibold"
-                      tintColor={colors.primary}
-                    />
-                  )}
-                </Pressable>
-              );
-            })}
-          </BlurView>
+                    <Text
+                      style={[
+                        styles.menuItemText,
+                        { color: colors.neutralDark },
+                        isSelected && { fontFamily: 'Inter_500Medium', color: colors.primary },
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                    {isSelected && (
+                      <SymbolView
+                        name="checkmark"
+                        size={18}
+                        weight="semibold"
+                        tintColor={colors.primary}
+                      />
+                    )}
+                  </Pressable>
+                );
+              })}
+            </BlurView>
+          </View>
         </Pressable>
       </Animated.View>
     </>
@@ -233,12 +230,18 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: MENU_WIDTH,
     zIndex: 1000,
-    // Modern CSS boxShadow syntax
+    borderRadius: MENU_BORDER_RADIUS,
+    borderCurve: 'continuous',
+    // NO overflow: hidden here - allows boxShadow to render outside bounds
     boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
   },
-  menuContainer: {
+  menuClip: {
+    // Separate layer for content clipping - clips BlurView to rounded corners
     borderRadius: MENU_BORDER_RADIUS,
+    borderCurve: 'continuous',
     overflow: 'hidden',
+  },
+  menuContainer: {
     paddingVertical: MENU_PADDING_VERTICAL,
   },
   menuItem: {
