@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Appearance } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ThemeProvider, DarkTheme, DefaultTheme } from '@react-navigation/native';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Notifications from 'expo-notifications';
 import {
@@ -33,7 +34,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout(): React.ReactElement | null {
   const router = useRouter();
-  const { isDark } = useTheme();
+  const { isDark, resolvedTheme } = useTheme();
   const responseListener = useRef<Notifications.Subscription | undefined>(undefined);
 
   const friends = useFriendsStore((state) => state.friends);
@@ -94,6 +95,12 @@ export default function RootLayout(): React.ReactElement | null {
     return () => clearTimeout(timeoutId);
   }, [pendingPermissionRequest, setPendingPermissionRequest, requestPermission]);
 
+  // Sync resolved theme to iOS native components (Appearance API)
+  // This ensures NativeTabs, formSheets, and other native UI respects the user's theme choice
+  useEffect(() => {
+    Appearance.setColorScheme(resolvedTheme);
+  }, [resolvedTheme]);
+
   useEffect(() => {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
@@ -107,40 +114,42 @@ export default function RootLayout(): React.ReactElement | null {
   return (
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider>
-        <ToastProvider>
-          <StatusBar style={isDark ? 'light' : 'dark'} />
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-            <Stack.Screen
-              name="add-friend"
-              options={{
-                presentation: 'formSheet',
-                sheetAllowedDetents: 'fitToContents',
-                sheetGrabberVisible: true,
-                headerShown: false,
-                contentStyle: { backgroundColor: 'transparent' },
-              }}
-            />
-            <Stack.Screen
-              name="journal-entry/[date]"
-              options={{
-                presentation: 'card',
-                animation: 'none', // Disable navigation animation - we handle it ourselves
-                gestureEnabled: false, // We handle gestures ourselves for swipe navigation
-              }}
-            />
-            <Stack.Screen
-              name="friend/[id]"
-              options={{
-                presentation: 'formSheet',
-                sheetAllowedDetents: 'fitToContents',
-                sheetGrabberVisible: true,
-                headerShown: false,
-                contentStyle: { backgroundColor: 'transparent' },
-              }}
-            />
-          </Stack>
-        </ToastProvider>
+        <ThemeProvider value={resolvedTheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <ToastProvider>
+            <StatusBar style={isDark ? 'light' : 'dark'} />
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" />
+              <Stack.Screen
+                name="add-friend"
+                options={{
+                  presentation: 'formSheet',
+                  sheetAllowedDetents: 'fitToContents',
+                  sheetGrabberVisible: true,
+                  headerShown: false,
+                  contentStyle: { backgroundColor: 'transparent' },
+                }}
+              />
+              <Stack.Screen
+                name="journal-entry/[date]"
+                options={{
+                  presentation: 'card',
+                  animation: 'none', // Disable navigation animation - we handle it ourselves
+                  gestureEnabled: false, // We handle gestures ourselves for swipe navigation
+                }}
+              />
+              <Stack.Screen
+                name="friend/[id]"
+                options={{
+                  presentation: 'formSheet',
+                  sheetAllowedDetents: 'fitToContents',
+                  sheetGrabberVisible: true,
+                  headerShown: false,
+                  contentStyle: { backgroundColor: 'transparent' },
+                }}
+              />
+            </Stack>
+          </ToastProvider>
+        </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

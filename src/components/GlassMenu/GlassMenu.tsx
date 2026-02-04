@@ -1,9 +1,16 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { View, Text, Pressable, StyleSheet, Animated, Platform } from 'react-native';
+import { useEffect, useCallback } from 'react';
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { BlurView } from 'expo-blur';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  runOnJS,
+} from 'react-native-reanimated';
 import { SymbolView } from 'expo-symbols';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/src/hooks/useTheme';
-import { getCardContainerStyle } from '@/src/constants/colors';
 
 export interface GlassMenuItem<T> {
   label: string;
@@ -27,6 +34,8 @@ interface GlassMenuProps<T> {
   alignment?: 'left' | 'right';
   /** Test ID for the menu container */
   testID?: string;
+  /** Touch point for scale animation origin (relative to trigger element) */
+  anchorPoint?: { x: number; y: number };
 }
 
 const MENU_BORDER_RADIUS = 16;
@@ -34,17 +43,43 @@ const ITEM_HEIGHT = 48;
 const MENU_PADDING_VERTICAL = 6;
 const MENU_WIDTH = 160;
 
-function getDirectionStyles(
-  direction: 'up' | 'down',
-  alignment: 'left' | 'right'
-): { top?: `${number}%`; bottom?: `${number}%`; marginTop?: number; marginBottom?: number; transformOrigin: string } {
-  const verticalOrigin = direction === 'down' ? 'top' : 'bottom';
-  const transformOrigin = `${verticalOrigin} ${alignment}`;
+// Animation constants
+const SCALE_START = 0.85;
+const SPRING_CONFIG = { damping: 15, stiffness: 150 };
+const CLOSE_DURATION = 100;
 
+function getDirectionStyles(
+  direction: 'up' | 'down'
+): { top?: `${number}%`; bottom?: `${number}%`; marginTop?: number; marginBottom?: number } {
   if (direction === 'down') {
-    return { top: '100%', marginTop: 4, transformOrigin };
+    return { top: '100%', marginTop: 4 };
   }
-  return { bottom: '100%', marginBottom: 4, transformOrigin };
+  return { bottom: '100%', marginBottom: 4 };
+}
+
+/**
+ * Calculate the transform origin offset for scale animation from anchor point.
+ * When no anchorPoint is provided, uses corner-based origin (0 or MENU_WIDTH).
+ */
+function getAnchorOffset(
+  anchorPoint: { x: number; y: number } | undefined,
+  direction: 'up' | 'down',
+  alignment: 'left' | 'right',
+  menuHeight: number
+): { offsetX: number; offsetY: number } {
+  if (anchorPoint) {
+    // Use touch point as origin
+    // Clamp X within menu width for predictable behavior
+    const offsetX = Math.min(Math.max(anchorPoint.x, 0), MENU_WIDTH);
+    // For Y, use the edge closest to the trigger
+    const offsetY = direction === 'down' ? 0 : menuHeight;
+    return { offsetX, offsetY };
+  }
+
+  // Fallback to corner-based origin
+  const offsetX = alignment === 'left' ? 0 : MENU_WIDTH;
+  const offsetY = direction === 'down' ? 0 : menuHeight;
+  return { offsetX, offsetY };
 }
 
 export function GlassMenu<T>({
@@ -56,51 +91,40 @@ export function GlassMenu<T>({
   direction = 'up',
   alignment = 'right',
   testID,
+  anchorPoint,
 }: GlassMenuProps<T>): React.ReactElement | null {
   const { colors, isDark } = useTheme();
-  const scaleAnim = useRef(new Animated.Value(0.97)).current;
-  const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  // Reanimated shared values
+  const scale = useSharedValue(SCALE_START);
+  const opacity = useSharedValue(0);
+
+  // Calculate menu height for transform origin
+  const menuHeight = items.length * ITEM_HEIGHT + MENU_PADDING_VERTICAL * 2;
+  const { offsetX, offsetY } = getAnchorOffset(anchorPoint, direction, alignment, menuHeight);
 
   useEffect(() => {
     if (visible) {
-      // Animate in
-      Animated.parallel([
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          tension: 300,
-          friction: 25,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacityAnim, {
-          toValue: 1,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      // Animate in with spring for scale, timing for opacity
+      scale.value = withSpring(1, SPRING_CONFIG);
+      opacity.value = withTiming(1, { duration: 150 });
     } else {
       // Reset for next open
-      scaleAnim.setValue(0.97);
-      opacityAnim.setValue(0);
+      scale.value = SCALE_START;
+      opacity.value = 0;
     }
-  }, [visible, scaleAnim, opacityAnim]);
+  }, [visible, scale, opacity]);
 
   const handleClose = useCallback(() => {
-    // Animate out
-    Animated.parallel([
-      Animated.timing(scaleAnim, {
-        toValue: 0.97,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacityAnim, {
-        toValue: 0,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      onClose();
+    // Animate out then call onClose
+    scale.value = withTiming(SCALE_START, { duration: CLOSE_DURATION });
+    opacity.value = withTiming(0, { duration: CLOSE_DURATION }, (finished) => {
+      'worklet';
+      if (finished) {
+        runOnJS(onClose)();
+      }
     });
-  }, [scaleAnim, opacityAnim, onClose]);
+  }, [scale, opacity, onClose]);
 
   const handleSelect = useCallback(
     (value: T) => {
@@ -110,6 +134,24 @@ export function GlassMenu<T>({
     },
     [onSelect, handleClose]
   );
+
+  // Animated style with scale-from-anchor-point using translate-scale-translate pattern
+  const animatedStyle = useAnimatedStyle(() => {
+    const currentScale = scale.value;
+    return {
+      opacity: opacity.value,
+      transform: [
+        // Move origin to anchor point
+        { translateX: offsetX },
+        { translateY: offsetY },
+        // Scale
+        { scale: currentScale },
+        // Move back, accounting for scale
+        { translateX: -offsetX },
+        { translateY: -offsetY },
+      ],
+    };
+  });
 
   if (!visible) {
     return null;
@@ -125,21 +167,17 @@ export function GlassMenu<T>({
         style={[
           styles.menuWrapper,
           alignment === 'left' ? { left: 0 } : { right: 0 },
-          getDirectionStyles(direction, alignment),
-          {
-            opacity: opacityAnim,
-            transform: [{ scale: scaleAnim }],
-          },
+          getDirectionStyles(direction),
+          animatedStyle,
         ]}
         testID={testID}
       >
         {/* Inner Pressable prevents taps from bubbling to backdrop */}
         <Pressable>
-          <View
-            style={[
-              styles.menuContainer,
-              getCardContainerStyle(colors, isDark),
-            ]}
+          <BlurView
+            tint={isDark ? 'dark' : 'extraLight'}
+            intensity={80}
+            style={styles.menuContainer}
           >
             {items.map((item, index) => {
               const isSelected = selectedValue === item.value;
@@ -176,7 +214,7 @@ export function GlassMenu<T>({
                 </Pressable>
               );
             })}
-          </View>
+          </BlurView>
         </Pressable>
       </Animated.View>
     </>
@@ -197,22 +235,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: MENU_WIDTH,
     zIndex: 1000,
+    // Modern CSS boxShadow syntax
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
   },
   menuContainer: {
     borderRadius: MENU_BORDER_RADIUS,
     overflow: 'hidden',
     paddingVertical: MENU_PADDING_VERTICAL,
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 24,
-      },
-      android: {
-        elevation: 8,
-      },
-    }),
   },
   menuItem: {
     flexDirection: 'row',

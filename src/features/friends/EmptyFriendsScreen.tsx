@@ -1,9 +1,9 @@
-import { View, Text, StyleSheet } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { SymbolView } from "expo-symbols";
-import { GlassButton } from "@/src/components/GlassButton";
-import { colors } from "@/src/constants/colors";
-import { typography } from "@/src/constants/typography";
+import { View, Text, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SymbolView } from 'expo-symbols';
+import { GlassButton } from '@/src/components/GlassButton';
+import { useTheme } from '@/src/hooks/useTheme';
+import { typography } from '@/src/constants/typography';
 
 interface EmptyFriendsScreenProps {
   onAddFriend: () => void;
@@ -19,22 +19,23 @@ const TAB_BAR_HEIGHT = 49;
  * TODO: Add fallback icon for Android/Web using @expo/vector-icons
  * The SymbolView "plus" icon only works on iOS.
  */
-export function EmptyFriendsScreen({ onAddFriend }: EmptyFriendsScreenProps) {
+export function EmptyFriendsScreen({ onAddFriend }: EmptyFriendsScreenProps): React.ReactElement {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const tabBarHeight = TAB_BAR_HEIGHT + insets.bottom;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.surfaceLight }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Pia</Text>
+        <Text style={[styles.title, { color: colors.neutralDark }]}>Pia</Text>
       </View>
 
       {/* Hero Section */}
       <View style={styles.heroContainer}>
         <View style={styles.hero}>
-          <Text style={styles.heroTitle}>Keep your closest within reach</Text>
-          <Text style={styles.heroSubtitle}>
+          <Text style={[styles.heroTitle, { color: colors.neutralGray300 }]}>Keep your closest within reach</Text>
+          <Text style={[styles.heroSubtitle, { color: colors.neutralGray300 }]}>
             Add friends to stay in touch, share memories, and never miss a
             birthday
           </Text>
@@ -68,7 +69,6 @@ export function EmptyFriendsScreen({ onAddFriend }: EmptyFriendsScreenProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surfaceLight,
     paddingHorizontal: 16,
   },
   header: {
@@ -76,7 +76,6 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.titleH1,
-    color: colors.neutralDark,
   },
   heroContainer: {
     flex: 1,
@@ -89,12 +88,10 @@ const styles = StyleSheet.create({
   },
   heroTitle: {
     ...typography.titleH1,
-    color: colors.neutralGray300,
     textAlign: "center",
   },
   heroSubtitle: {
     ...typography.body1,
-    color: colors.neutralGray300,
     textAlign: "center",
     lineHeight: 24,
   },

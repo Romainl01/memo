@@ -1,6 +1,6 @@
-import { Pressable, StyleSheet, Text, View, ViewStyle, StyleProp } from "react-native";
-import { GlassView } from "expo-glass-effect";
-import { colors } from "@/src/constants/colors";
+import { Pressable, StyleSheet, Text, View, ViewStyle, StyleProp } from 'react-native';
+import { GlassView } from 'expo-glass-effect';
+import { useTheme } from '@/src/hooks/useTheme';
 
 interface GlassButtonProps {
   onPress: () => void;
@@ -25,6 +25,7 @@ function GlassButton({
   testID,
   labelColor,
 }: GlassButtonProps): React.ReactElement {
+  const { colors } = useTheme();
   const isIconOnly = !label && icon;
 
   return (
@@ -45,7 +46,7 @@ function GlassButton({
         <View style={styles.content}>
           {icon}
           {label && (
-            <Text style={[styles.label, labelColor && { color: labelColor }]}>
+            <Text style={[styles.label, { color: labelColor ?? colors.neutralDark }]}>
               {label}
             </Text>
           )}
@@ -60,8 +61,8 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
   glass: {
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   pillShape: {
     paddingHorizontal: 20,
@@ -70,17 +71,16 @@ const styles = StyleSheet.create({
     height: 48,
   },
   content: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     height: 36,
   },
   label: {
-    fontFamily: "Inter_500Medium",
+    fontFamily: 'Inter_500Medium',
     fontSize: 17,
-    fontWeight: "500",
-    color: colors.neutralDark,
-    textAlign: "center",
+    fontWeight: '500',
+    textAlign: 'center',
   },
 });
 

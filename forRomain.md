@@ -1,6 +1,6 @@
 # Pia — What I Built and What I Learned
 
-> Last updated: January 2026 — v1 snapshot (Friends feature, notifications, core architecture)
+> Last updated: February 2026 — Dark mode theming, Journal feature, native component state sync
 
 ---
 
@@ -221,6 +221,38 @@ iOS Liquid Glass uses `UIBlurEffect` under the hood, which automatically adapts 
 The debugging lesson: **always check system settings first.** Dark mode, reduced motion, font scaling, low power mode — these affect rendering in ways that can look like bugs. Before searching GitHub issues or Stack Overflow, ask: "Did the user (or I) change a device setting?"
 
 This applies beyond dark mode: if something "suddenly" looks wrong, the simplest explanation is usually right. A setting changed. A dependency updated. A cable came loose. Start there.
+
+### 8. The Two Worlds Problem — JavaScript vs Native
+
+After implementing dark mode with Zustand and a `useTheme()` hook, we toggled to dark mode in settings... and the tab bar stayed light. The bottom sheets stayed light. Only the React components changed.
+
+The problem: **React Native has two worlds that don't automatically talk to each other.**
+
+```
+┌─────────────────────┐         ┌─────────────────────┐
+│   JavaScript World  │         │    iOS Native World │
+│                     │   ✗     │                     │
+│  Zustand store:     │ ──────> │  NativeTabs         │
+│  theme = "dark"     │ (no     │  formSheet          │
+│                     │  link)  │  Liquid Glass       │
+└─────────────────────┘         └─────────────────────┘
+```
+
+When you change state in Zustand, React components re-render because they're subscribed to that state. But NativeTabs and formSheet aren't React components — they're thin wrappers around UIKit. They ask iOS directly: "What appearance should I use?" And iOS says whatever the *system* setting is, not your app's setting.
+
+The fix required building bridges:
+
+```typescript
+// Bridge 1: Tell iOS at the system level
+Appearance.setColorScheme(resolvedTheme);
+
+// Bridge 2: Tell React Navigation (which NativeTabs reads from)
+<ThemeProvider value={resolvedTheme === 'dark' ? DarkTheme : DefaultTheme}>
+```
+
+The broader lesson: **whenever you use native components (NativeTabs, native modals, pickers), ask yourself: "How does this component know about my app's state?"** If the answer is "it doesn't," you need to build a bridge.
+
+This is a fundamental React Native concept. Your JavaScript state is isolated from the native layer unless you explicitly sync it. Most of the time React Native handles this automatically (when you set `style={{ backgroundColor: 'red' }}`, the native view updates). But some native components have their own state sources — like reading the system appearance — and those need manual synchronization.
 
 ---
 

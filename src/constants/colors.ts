@@ -51,7 +51,7 @@ export const darkColors = {
   primary: '#F28C59',
   primary200: '#C9A961',
   primaryLight: '#3D2820',
-  primaryGradientStart: '#2A211D',
+  primaryGradientStart: '#4A3328',  // Warmer terracotta brown for visible gradient
   primaryGradientEnd: '#1A1918',
 
   // Neutral - inverted for dark mode
