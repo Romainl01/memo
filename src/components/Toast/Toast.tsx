@@ -12,7 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Rect } from 'react-native-svg';
 import { useToastStore } from '@/src/stores/toastStore';
-import { colors } from '@/src/constants/colors';
+import { useTheme } from '@/src/hooks/useTheme';
 import { typography } from '@/src/constants/typography';
 
 const AUTO_DISMISS_MS = 4000;
@@ -54,7 +54,8 @@ function BurningFuseBorder({
   height,
   duration,
   toastId,
-}: BurningFuseBorderProps): React.ReactElement {
+  borderColor,
+}: BurningFuseBorderProps & { borderColor: string }): React.ReactElement {
   const perimeter = calculateRoundedRectPerimeter(
     width - BORDER_WIDTH,
     height - BORDER_WIDTH,
@@ -89,7 +90,7 @@ function BurningFuseBorder({
         height={height - BORDER_WIDTH}
         rx={BORDER_RADIUS - BORDER_WIDTH / 2}
         ry={BORDER_RADIUS - BORDER_WIDTH / 2}
-        stroke={colors.toastFuseBorder}
+        stroke={borderColor}
         strokeWidth={BORDER_WIDTH}
         fill="none"
         strokeDasharray={perimeter}
@@ -100,6 +101,7 @@ function BurningFuseBorder({
 }
 
 function Toast(): React.ReactElement | null {
+  const { colors, isDark } = useTheme();
   const { visible, message, undoAction, hideToast, toastId } = useToastStore();
   const insets = useSafeAreaInsets();
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -144,9 +146,9 @@ function Toast(): React.ReactElement | null {
       testID="toast-container"
       onLayout={handleLayout}
     >
-      <BlurView tint="extraLight" intensity={100} style={styles.glass}>
+      <BlurView tint={isDark ? 'dark' : 'extraLight'} intensity={100} style={styles.glass}>
         <View style={styles.content}>
-          <Text style={styles.message} numberOfLines={2}>
+          <Text style={[styles.message, { color: colors.neutralDark }]} numberOfLines={2}>
             {message}
           </Text>
           {undoAction && (
@@ -155,7 +157,7 @@ function Toast(): React.ReactElement | null {
               testID="toast-undo-button"
               hitSlop={8}
             >
-              <Text style={styles.undoButton}>Undo</Text>
+              <Text style={[styles.undoButton, { color: colors.primary }]}>Undo</Text>
             </Pressable>
           )}
         </View>
@@ -166,6 +168,7 @@ function Toast(): React.ReactElement | null {
           height={dimensions.height}
           duration={AUTO_DISMISS_MS}
           toastId={String(toastId)}
+          borderColor={colors.toastFuseBorder}
         />
       )}
     </Animated.View>
@@ -196,12 +199,10 @@ const styles = StyleSheet.create({
   },
   message: {
     ...typography.body1,
-    color: colors.neutralDark,
     flex: 1,
   },
   undoButton: {
     ...typography.body1,
-    color: colors.primary,
     fontWeight: '600',
   },
 });

@@ -1,10 +1,11 @@
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import { Avatar } from '@/src/components/Avatar';
+import { useTheme } from '@/src/hooks/useTheme';
 import { Friend, RELATIONSHIP_LABELS } from '@/src/stores/friendsStore';
 import { getDaysRemaining, getRelativeLastContact } from '@/src/utils';
-import { colors } from '@/src/constants/colors';
 import { typography } from '@/src/constants/typography';
+import { getCardContainerStyle, type ThemeColors } from '@/src/constants/colors';
 
 interface FriendCardProps {
   friend: Friend;
@@ -21,7 +22,7 @@ function getCheckInStatus(daysRemaining: number): CheckInStatus {
   return 'on-track';
 }
 
-function getStatusColor(status: CheckInStatus): string {
+function getStatusColor(status: CheckInStatus, colors: ThemeColors): string {
   switch (status) {
     case 'overdue':
       return colors.feedbackError;
@@ -34,9 +35,10 @@ function getStatusColor(status: CheckInStatus): string {
 }
 
 function FriendCard({ friend, onPress, onCatchUp }: FriendCardProps): React.ReactElement {
+  const { colors, isDark } = useTheme();
   const daysRemaining = getDaysRemaining(friend.lastContactAt, friend.frequencyDays);
   const status = getCheckInStatus(daysRemaining);
-  const statusColor = getStatusColor(status);
+  const statusColor = getStatusColor(status, colors);
   const relativeDate = getRelativeLastContact(friend.lastContactAt);
 
   return (
@@ -46,7 +48,12 @@ function FriendCard({ friend, onPress, onCatchUp }: FriendCardProps): React.Reac
       accessibilityRole="button"
       style={styles.shadowWrapper}
     >
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          getCardContainerStyle(colors, isDark),
+        ]}
+      >
         <Avatar
           name={friend.name}
           imageUri={friend.photoUrl ?? undefined}
@@ -55,11 +62,11 @@ function FriendCard({ friend, onPress, onCatchUp }: FriendCardProps): React.Reac
 
         <View style={styles.content}>
           <View style={styles.nameRow}>
-            <Text style={styles.name} numberOfLines={1}>
+            <Text style={[styles.name, { color: colors.neutralDark }]} numberOfLines={1}>
               {friend.name}
             </Text>
-            <View style={styles.categoryPill}>
-              <Text style={styles.categoryText}>
+            <View style={[styles.categoryPill, { borderColor: colors.categoryPillBorder }]}>
+              <Text style={[styles.categoryText, { color: colors.neutralGray }]}>
                 {RELATIONSHIP_LABELS[friend.category]}
               </Text>
             </View>
@@ -69,7 +76,7 @@ function FriendCard({ friend, onPress, onCatchUp }: FriendCardProps): React.Reac
               style={[styles.statusDot, { backgroundColor: statusColor }]}
               testID="status-dot"
             />
-            <Text style={styles.statusText}>
+            <Text style={[styles.statusText, { color: colors.neutralGray }]}>
               Last seen {relativeDate.toLowerCase()}
             </Text>
           </View>
@@ -107,7 +114,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
-    backgroundColor: colors.neutralWhite,
     borderRadius: 16,
     overflow: 'hidden',
     gap: 12,
@@ -123,13 +129,11 @@ const styles = StyleSheet.create({
   },
   name: {
     ...typography.body1,
-    color: colors.neutralDark,
     fontWeight: '600',
     flexShrink: 1,
   },
   categoryPill: {
     borderWidth: 1,
-    borderColor: 'rgba(242, 140, 89, 0.4)',
     borderRadius: 6,
     paddingHorizontal: 7,
     paddingVertical: 2,
@@ -137,7 +141,6 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: 11,
     fontWeight: '500',
-    color: colors.neutralGray,
   },
   statusContainer: {
     flexDirection: 'row',
@@ -151,7 +154,6 @@ const styles = StyleSheet.create({
   },
   statusText: {
     ...typography.body2,
-    color: colors.neutralGray,
   },
   catchUpButton: {
     padding: 4,

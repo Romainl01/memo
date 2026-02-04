@@ -3,7 +3,8 @@ import { Pressable, View, Text, StyleSheet } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import type { SFSymbol } from 'sf-symbols-typescript';
 import * as Haptics from 'expo-haptics';
-import { colors } from '@/src/constants/colors';
+import { useTheme } from '@/src/hooks/useTheme';
+import { getCardContainerStyle } from '@/src/constants/colors';
 
 interface SettingsRowProps {
   icon: SFSymbol;
@@ -32,6 +33,8 @@ const SettingsRow = forwardRef<View, SettingsRowProps>(function SettingsRow(
   },
   ref
 ) {
+  const { colors, isDark } = useTheme();
+
   const handlePress = () => {
     Haptics.selectionAsync();
     onPress?.();
@@ -50,17 +53,22 @@ const SettingsRow = forwardRef<View, SettingsRowProps>(function SettingsRow(
       accessibilityRole="button"
       accessibilityLabel={`${label}: ${value}`}
     >
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          getCardContainerStyle(colors, isDark),
+        ]}
+      >
         <View style={styles.leftSection}>
           <SymbolView
             name={icon}
             size={24}
             tintColor={colors.neutralDark}
           />
-          <Text style={styles.label}>{label}</Text>
+          <Text style={[styles.label, { color: colors.neutralDark }]}>{label}</Text>
         </View>
         <View style={styles.rightSection}>
-          <Text style={styles.value}>{value}</Text>
+          <Text style={[styles.value, { color: colors.neutralDark }]}>{value}</Text>
           {showChevron && (
             <SymbolView
               name={chevronIcon}
@@ -81,7 +89,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 16,
     borderRadius: 16,
-    backgroundColor: colors.neutralWhite,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -101,12 +108,10 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: 'Inter_500Medium',
     fontSize: 16,
-    color: colors.neutralDark,
   },
   value: {
     fontFamily: 'Inter_500Medium',
     fontSize: 16,
-    color: colors.neutralDark,
   },
 });
 

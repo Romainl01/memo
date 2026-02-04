@@ -1,19 +1,20 @@
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { colors } from '@/src/constants/colors';
+import { useTheme } from '@/src/hooks/useTheme';
 import { GradientBackground } from '@/src/components/GradientBackground';
 import { typography } from '@/src/constants/typography';
 import { SettingsScreen as SettingsContent } from '@/src/features/settings/SettingsScreen';
 
 export default function SettingsScreen(): React.ReactElement {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.surfaceLight }]}>
       <GradientBackground />
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Text style={styles.title}>Settings</Text>
+          <Text style={[styles.title, { color: colors.neutralDark }]}>Settings</Text>
         </View>
         <ScrollView contentContainerStyle={styles.content}>
           <SettingsContent />
@@ -26,7 +27,6 @@ export default function SettingsScreen(): React.ReactElement {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.surfaceLight,
   },
   container: {
     flex: 1,
@@ -37,7 +37,6 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.titleH1,
-    color: colors.neutralDark,
   },
   content: {
     paddingBottom: 32,

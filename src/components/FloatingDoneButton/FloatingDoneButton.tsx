@@ -8,7 +8,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { GlassButton } from '@/src/components/GlassButton';
-import { colors } from '@/src/constants/colors';
+import { useTheme } from '@/src/hooks/useTheme';
 
 interface FloatingDoneButtonProps {
   hasContent: boolean;
@@ -23,6 +23,7 @@ function FloatingDoneButton({
   hasContent,
   onPress,
 }: FloatingDoneButtonProps): React.ReactElement | null {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const keyboard = useAnimatedKeyboard();
 

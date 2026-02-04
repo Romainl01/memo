@@ -1,6 +1,7 @@
 import { Pressable, View, StyleSheet } from 'react-native';
 
-import { journalColorSchemes, JournalColorScheme } from '@/src/constants/colors';
+import { useTheme } from '@/src/hooks/useTheme';
+import { journalColorScheme, JournalSchemeColors } from '@/src/constants/colors';
 
 export type DayDotStatus =
   | 'past-with-entry'
@@ -12,8 +13,6 @@ interface DayDotProps {
   status: DayDotStatus;
   /** Size of the cell containing the dot */
   size: number;
-  /** Color scheme to use */
-  colorScheme?: JournalColorScheme;
   onPress?: () => void;
   testID?: string;
 }
@@ -30,14 +29,14 @@ interface DayDotProps {
 function DayDot({
   status,
   size,
-  colorScheme = 'A',
   onPress,
   testID,
 }: DayDotProps): React.ReactElement {
+  const { isDark } = useTheme();
   const isFuture = status === 'future';
   const isToday = status === 'today';
 
-  const scheme = journalColorSchemes[colorScheme];
+  const scheme = isDark ? journalColorScheme.dark : journalColorScheme.light;
 
   // Base dot is 60% of cell size
   const baseDotSize = Math.max(4, size * 0.6);
@@ -81,7 +80,7 @@ function DayDot({
 
 function getDotColor(
   status: DayDotStatus,
-  scheme: (typeof journalColorSchemes)[JournalColorScheme]
+  scheme: JournalSchemeColors
 ): string {
   switch (status) {
     case 'past-with-entry':

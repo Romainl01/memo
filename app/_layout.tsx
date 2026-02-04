@@ -24,6 +24,7 @@ import { useFriendsStore } from '@/src/stores/friendsStore';
 import { useNotificationStateStore } from '@/src/stores/notificationStateStore';
 import { useNotificationPermission } from '@/src/hooks/useNotificationPermission';
 import { ToastProvider } from '@/src/components/Toast';
+import { useTheme } from '@/src/hooks/useTheme';
 
 // Delay before requesting permission to allow sheet dismiss animation to complete
 const SHEET_DISMISS_DELAY_MS = 400;
@@ -32,6 +33,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout(): React.ReactElement | null {
   const router = useRouter();
+  const { isDark } = useTheme();
   const responseListener = useRef<Notifications.Subscription | undefined>(undefined);
 
   const friends = useFriendsStore((state) => state.friends);
@@ -106,7 +108,7 @@ export default function RootLayout(): React.ReactElement | null {
     <GestureHandlerRootView style={styles.container}>
       <SafeAreaProvider>
         <ToastProvider>
-          <StatusBar style="auto" />
+          <StatusBar style={isDark ? 'light' : 'dark'} />
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen

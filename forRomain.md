@@ -210,6 +210,18 @@ This pattern is borrowed from web frameworks (Next.js does the same thing with `
 
 When recalculating notifications, we cancel all scheduled notifications and reschedule from scratch. This sounds inefficient, but it eliminates an entire class of bugs around stale notifications. The lesson: **sometimes the straightforward approach is the smartest one.** Incremental updates are clever but fragile. Full recalculation is simple and correct.
 
+### 7. Check the Obvious Before the Obscure
+
+The liquid glass components (tab bar, bottom sheets) were rendering dark instead of translucent. The instinct was to dive into GitHub issues — opacity animation bugs, Expo Go limitations, screen transition flickering. Hours could have been spent chasing those.
+
+The actual cause? **The phone was in dark mode.**
+
+iOS Liquid Glass uses `UIBlurEffect` under the hood, which automatically adapts to the system appearance. In dark mode, it samples darker backgrounds and renders with darker tints. This is *intentional behavior*, not a bug.
+
+The debugging lesson: **always check system settings first.** Dark mode, reduced motion, font scaling, low power mode — these affect rendering in ways that can look like bugs. Before searching GitHub issues or Stack Overflow, ask: "Did the user (or I) change a device setting?"
+
+This applies beyond dark mode: if something "suddenly" looks wrong, the simplest explanation is usually right. A setting changed. A dependency updated. A cable came loose. Start there.
+
 ---
 
 ## How Good Engineers Think

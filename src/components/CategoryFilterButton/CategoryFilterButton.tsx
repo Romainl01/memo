@@ -4,7 +4,7 @@ import { GlassView } from 'expo-glass-effect';
 import { SymbolView } from 'expo-symbols';
 import * as Haptics from 'expo-haptics';
 import { GlassMenu, GlassMenuItem } from '@/src/components/GlassMenu';
-import { colors } from '@/src/constants/colors';
+import { useTheme } from '@/src/hooks/useTheme';
 import type { FriendCategory } from '@/src/stores/friendsStore';
 import { RELATIONSHIP_LABELS } from '@/src/stores/friendsStore';
 
@@ -37,6 +37,7 @@ function CategoryFilterButton({
   onChange,
   style,
 }: CategoryFilterButtonProps): React.ReactElement {
+  const { colors } = useTheme();
   const [showMenu, setShowMenu] = useState(false);
 
   const selectedLabel = value ? RELATIONSHIP_LABELS[value] : 'All';
@@ -66,7 +67,7 @@ function CategoryFilterButton({
       >
         <GlassView isInteractive style={styles.filterPill}>
           <View style={styles.content}>
-            <Text style={styles.label}>{selectedLabel}</Text>
+            <Text style={[styles.label, { color: colors.neutralDark }]}>{selectedLabel}</Text>
             <SymbolView
               name="chevron.down"
               size={12}
@@ -114,7 +115,6 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: 'Inter_500Medium',
     fontSize: 15,
-    color: colors.neutralDark,
   },
 });
 

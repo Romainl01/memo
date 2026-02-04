@@ -5,8 +5,8 @@ import { FriendCard } from './FriendCard';
 import { FilteredEmptyState } from './FilteredEmptyState';
 import { useFriendsStore, Friend } from '@/src/stores/friendsStore';
 import { useToastStore } from '@/src/stores/toastStore';
+import { useTheme } from '@/src/hooks/useTheme';
 import { getDaysRemaining } from '@/src/utils';
-import { colors } from '@/src/constants/colors';
 import { typography } from '@/src/constants/typography';
 
 interface FriendsListProps {
@@ -19,6 +19,7 @@ function Separator(): React.ReactElement {
 }
 
 function FriendsList({ onFriendPress, onAddFriend }: FriendsListProps): React.ReactElement {
+  const { colors } = useTheme();
   const friends = useFriendsStore((state) => state.friends);
   const selectedCategory = useFriendsStore((state) => state.selectedCategory);
   const logCatchUp = useFriendsStore((state) => state.logCatchUp);
@@ -51,8 +52,8 @@ function FriendsList({ onFriendPress, onAddFriend }: FriendsListProps): React.Re
   if (friends.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No friends yet</Text>
-        <Text style={styles.emptySubtext}>Add your first friend to get started!</Text>
+        <Text style={[styles.emptyText, { color: colors.neutralGray300 }]}>No friends yet</Text>
+        <Text style={[styles.emptySubtext, { color: colors.neutralGray }]}>Add your first friend to get started!</Text>
       </View>
     );
   }
@@ -101,12 +102,10 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...typography.titleH2,
-    color: colors.neutralGray300,
     marginBottom: 8,
   },
   emptySubtext: {
     ...typography.body1,
-    color: colors.neutralGray,
     textAlign: 'center',
   },
 });

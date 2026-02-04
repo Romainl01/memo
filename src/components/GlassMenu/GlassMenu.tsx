@@ -2,7 +2,8 @@ import { useEffect, useRef, useCallback } from 'react';
 import { View, Text, Pressable, StyleSheet, Animated, Platform } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import * as Haptics from 'expo-haptics';
-import { colors } from '@/src/constants/colors';
+import { useTheme } from '@/src/hooks/useTheme';
+import { getCardContainerStyle } from '@/src/constants/colors';
 
 export interface GlassMenuItem<T> {
   label: string;
@@ -56,6 +57,7 @@ export function GlassMenu<T>({
   alignment = 'right',
   testID,
 }: GlassMenuProps<T>): React.ReactElement | null {
+  const { colors, isDark } = useTheme();
   const scaleAnim = useRef(new Animated.Value(0.97)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
@@ -133,7 +135,12 @@ export function GlassMenu<T>({
       >
         {/* Inner Pressable prevents taps from bubbling to backdrop */}
         <Pressable>
-          <View style={styles.menuContainer}>
+          <View
+            style={[
+              styles.menuContainer,
+              getCardContainerStyle(colors, isDark),
+            ]}
+          >
             {items.map((item, index) => {
               const isSelected = selectedValue === item.value;
               const isLast = index === items.length - 1;
@@ -143,8 +150,8 @@ export function GlassMenu<T>({
                   key={String(item.value)}
                   style={({ pressed }) => [
                     styles.menuItem,
-                    !isLast && styles.menuItemWithBorder,
-                    pressed && styles.menuItemPressed,
+                    !isLast && { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.menuItemBorder },
+                    pressed && { backgroundColor: colors.menuItemPressed },
                   ]}
                   onPress={() => handleSelect(item.value)}
                   testID={`${testID}-item-${item.value}`}
@@ -152,7 +159,8 @@ export function GlassMenu<T>({
                   <Text
                     style={[
                       styles.menuItemText,
-                      isSelected && styles.menuItemTextSelected,
+                      { color: colors.neutralDark },
+                      isSelected && { fontFamily: 'Inter_500Medium', color: colors.primary },
                     ]}
                   >
                     {item.label}
@@ -194,7 +202,6 @@ const styles = StyleSheet.create({
     borderRadius: MENU_BORDER_RADIUS,
     overflow: 'hidden',
     paddingVertical: MENU_PADDING_VERTICAL,
-    backgroundColor: colors.neutralWhite,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -214,20 +221,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     height: ITEM_HEIGHT,
   },
-  menuItemWithBorder: {
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  menuItemPressed: {
-    backgroundColor: 'rgba(0, 0, 0, 0.05)',
-  },
   menuItemText: {
     fontFamily: 'Inter_400Regular',
     fontSize: 18,
-    color: colors.neutralDark,
-  },
-  menuItemTextSelected: {
-    fontFamily: 'Inter_500Medium',
-    color: colors.primary,
   },
 });

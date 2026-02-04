@@ -1,7 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { GlassView } from 'expo-glass-effect';
 
-import { colors } from '@/src/constants/colors';
+import { useTheme } from '@/src/hooks/useTheme';
 import { isToday, formatShortDate } from '@/src/utils/journalDateHelpers';
 
 interface GlassDateChipProps {
@@ -17,12 +17,13 @@ function GlassDateChip({
   date,
   testID,
 }: GlassDateChipProps): React.ReactElement {
+  const { colors } = useTheme();
   const displayText = isToday(date) ? 'Today' : formatShortDate(date);
 
   return (
     <View testID={testID} style={styles.container}>
       <GlassView style={styles.glass}>
-        <Text style={styles.label}>{displayText}</Text>
+        <Text style={[styles.label, { color: colors.primary }]}>{displayText}</Text>
       </GlassView>
     </View>
   );
@@ -43,7 +44,6 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter_500Medium',
     fontSize: 15,
     fontWeight: '500',
-    color: colors.primary,
   },
 });
 

@@ -5,10 +5,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FriendDetailSheet } from '@/src/features/friends';
 import { SheetBackground } from '@/src/components/SheetBackground';
 import { useFriendsStore } from '@/src/stores/friendsStore';
-import { colors } from '@/src/constants/colors';
+import { useTheme } from '@/src/hooks/useTheme';
 import { typography } from '@/src/constants/typography';
 
 export default function FriendDetailScreen(): React.ReactElement {
+  const { colors } = useTheme();
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
 
@@ -48,7 +49,7 @@ export default function FriendDetailScreen(): React.ReactElement {
   if (!friend) {
     return (
       <View style={[styles.errorContainer, { paddingBottom: insets.bottom }]}>
-        <Text style={styles.errorText}>Friend not found</Text>
+        <Text style={[styles.errorText, { color: colors.neutralGray }]}>Friend not found</Text>
       </View>
     );
   }
@@ -76,7 +77,6 @@ const styles = StyleSheet.create({
   },
   errorText: {
     ...typography.body1,
-    color: colors.neutralGray,
     textAlign: 'center',
   },
 });

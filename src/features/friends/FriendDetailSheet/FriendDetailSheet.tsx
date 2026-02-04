@@ -5,8 +5,8 @@ import { SymbolView } from 'expo-symbols';
 import * as Haptics from 'expo-haptics';
 import { Avatar } from '@/src/components/Avatar';
 import { useAutoSave } from '@/src/hooks/useAutoSave';
+import { useTheme } from '@/src/hooks/useTheme';
 import type { Friend } from '@/src/stores/friendsStore';
-import { colors } from '@/src/constants/colors';
 import { typography } from '@/src/constants/typography';
 
 const BUTTON_SIZE = 44;
@@ -24,6 +24,7 @@ function FriendDetailSheet({
   onClose,
   onNotesChange,
 }: FriendDetailSheetProps): React.ReactElement {
+  const { colors } = useTheme();
   const [notes, setNotes] = useState(friend.notes);
 
   useAutoSave({
@@ -88,14 +89,14 @@ function FriendDetailSheet({
           imageUri={friend.photoUrl ?? undefined}
           size={72}
         />
-        <Text style={styles.name}>{friend.name}</Text>
+        <Text style={[styles.name, { color: colors.neutralDark }]}>{friend.name}</Text>
       </View>
 
       {/* Notes section */}
       <View style={styles.notesSection}>
-        <View style={styles.notesContainer}>
+        <View style={[styles.notesContainer, { backgroundColor: colors.notesBackground }]}>
           <TextInput
-            style={styles.notesInput}
+            style={[styles.notesInput, { color: colors.neutralDark }]}
             value={notes}
             onChangeText={setNotes}
             placeholder="Add notes about this friend..."
@@ -135,21 +136,18 @@ const styles = StyleSheet.create({
   },
   name: {
     ...typography.titleH1,
-    color: colors.neutralDark,
     textAlign: 'center',
   },
   notesSection: {
     paddingHorizontal: 16,
   },
   notesContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderRadius: 16,
     padding: 16,
     minHeight: 180,
   },
   notesInput: {
     ...typography.mono1,
-    color: colors.neutralDark,
     flex: 1,
     minHeight: 140,
     padding: 0,

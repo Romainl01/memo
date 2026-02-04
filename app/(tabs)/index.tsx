@@ -4,7 +4,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 
-import { colors } from '@/src/constants/colors';
+import { useTheme } from '@/src/hooks/useTheme';
 import { GradientBackground } from '@/src/components/GradientBackground';
 import { typography } from '@/src/constants/typography';
 import { GlassButton } from '@/src/components/GlassButton';
@@ -25,6 +25,7 @@ const HORIZONTAL_PADDING = 16;
  * The entire year fits on one screen without scrolling.
  */
 export default function JournalScreen(): React.ReactElement {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const currentYear = new Date().getFullYear();
@@ -51,11 +52,11 @@ export default function JournalScreen(): React.ReactElement {
   }, [handleDayPress]);
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.surfaceLight }]}>
       <GradientBackground />
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Text style={styles.title}>Journal</Text>
+          <Text style={[styles.title, { color: colors.neutralDark }]}>Journal</Text>
           <DaysRemainingCounter daysRemaining={daysRemaining} />
         </View>
 
@@ -91,7 +92,6 @@ export default function JournalScreen(): React.ReactElement {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.surfaceLight,
   },
   container: {
     flex: 1,
@@ -106,7 +106,6 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.titleH1,
-    color: colors.neutralDark,
   },
   gridContainer: {
     alignItems: 'center',

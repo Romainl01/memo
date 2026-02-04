@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { GlassButton } from '@/src/components/GlassButton';
-import { colors } from '@/src/constants/colors';
+import { useTheme } from '@/src/hooks/useTheme';
 import { typography } from '@/src/constants/typography';
 import type { FriendCategory } from '@/src/stores/friendsStore';
 import { RELATIONSHIP_LABELS } from '@/src/stores/friendsStore';
@@ -28,14 +28,15 @@ const CATEGORY_SUBTITLES: Record<FriendCategory, string> = {
 };
 
 function FilteredEmptyState({ category, onAddFriend }: FilteredEmptyStateProps): React.ReactElement {
+  const { colors } = useTheme();
   const categoryLabel = RELATIONSHIP_LABELS[category];
   const ctaLabel = CATEGORY_CTA_LABELS[category];
   const subtitle = CATEGORY_SUBTITLES[category];
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>No {categoryLabel.toLowerCase()} yet</Text>
-      <Text style={styles.subtitle}>{subtitle}</Text>
+      <Text style={[styles.title, { color: colors.neutralGray300 }]}>No {categoryLabel.toLowerCase()} yet</Text>
+      <Text style={[styles.subtitle, { color: colors.neutralGray }]}>{subtitle}</Text>
       <GlassButton
         onPress={onAddFriend}
         label={ctaLabel}
@@ -56,12 +57,10 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.titleH2,
-    color: colors.neutralGray300,
     textAlign: 'center',
   },
   subtitle: {
     ...typography.body1,
-    color: colors.neutralGray,
     textAlign: 'center',
   },
 });

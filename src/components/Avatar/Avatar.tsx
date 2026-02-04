@@ -1,5 +1,5 @@
 import { View, Image, Text, StyleSheet, StyleProp, ViewStyle } from 'react-native';
-import { colors } from '@/src/constants/colors';
+import { useTheme } from '@/src/hooks/useTheme';
 
 interface AvatarProps {
   name: string;
@@ -28,6 +28,7 @@ function getInitials(name: string): string {
 }
 
 function Avatar({ name, imageUri, size = 80, style }: AvatarProps): React.ReactElement {
+  const { colors } = useTheme();
   const initials = getInitials(name);
   const borderRadius = size / 2;
 
@@ -55,9 +56,9 @@ function Avatar({ name, imageUri, size = 80, style }: AvatarProps): React.ReactE
       ) : (
         <View
           testID="avatar-initials"
-          style={[containerStyle, styles.initialsContainer]}
+          style={[containerStyle, styles.initialsContainer, { backgroundColor: colors.primaryLight }]}
         >
-          <Text style={[styles.initialsText, { fontSize: size * 0.4 }]}>
+          <Text style={[styles.initialsText, { fontSize: size * 0.4, color: colors.primary }]}>
             {initials}
           </Text>
         </View>
@@ -72,12 +73,10 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   initialsContainer: {
-    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
   initialsText: {
-    color: colors.primary,
     fontWeight: '600',
   },
 });

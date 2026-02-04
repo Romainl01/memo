@@ -10,7 +10,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 
-import { colors } from '@/src/constants/colors';
+import { useTheme } from '@/src/hooks/useTheme';
 import { typography } from '@/src/constants/typography';
 import { useJournalStore } from '@/src/stores/journalStore';
 import { useToastStore } from '@/src/stores/toastStore';
@@ -29,6 +29,7 @@ import { SwipeableJournalContainer } from '@/src/features/journal/SwipeableJourn
  * - Debounced auto-save with visual feedback
  */
 export default function JournalEntryScreen(): React.ReactElement {
+  const { colors } = useTheme();
   const { date } = useLocalSearchParams<{ date: string }>();
   const insets = useSafeAreaInsets();
 
@@ -84,11 +85,11 @@ export default function JournalEntryScreen(): React.ReactElement {
   );
 
   if (!date) {
-    return <View style={styles.container} />;
+    return <View style={[styles.container, { backgroundColor: colors.surfaceLight }]} />;
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.surfaceLight }]}>
       {/* Header */}
       <View style={styles.header}>
         <GlassButton
@@ -122,7 +123,7 @@ export default function JournalEntryScreen(): React.ReactElement {
           keyboardVerticalOffset={insets.top + 60}
         >
           <TextInput
-            style={styles.textInput}
+            style={[styles.textInput, { color: colors.neutralDark }]}
             value={content}
             onChangeText={setContent}
             placeholder="Write about your day..."
@@ -147,7 +148,6 @@ export default function JournalEntryScreen(): React.ReactElement {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.surfaceLight,
   },
   header: {
     flexDirection: 'row',
@@ -167,7 +167,6 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     ...typography.mono1,
-    color: colors.neutralDark,
     lineHeight: 28,
   },
 });

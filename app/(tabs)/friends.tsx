@@ -9,7 +9,7 @@ import { GlassButton } from '@/src/components/GlassButton';
 import { CategoryFilterButton } from '@/src/components/CategoryFilterButton';
 import { useContacts } from '@/src/hooks/useContacts';
 import { useFriendsStore, Friend } from '@/src/stores/friendsStore';
-import { colors } from '@/src/constants/colors';
+import { useTheme } from '@/src/hooks/useTheme';
 import { typography } from '@/src/constants/typography';
 
 /**
@@ -21,6 +21,7 @@ import { typography } from '@/src/constants/typography';
 const TAB_BAR_HEIGHT = 49;
 
 export default function FriendsScreen(): React.ReactElement {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const tabBarHeight = TAB_BAR_HEIGHT + insets.bottom;
   const friends = useFriendsStore((state) => state.friends);
@@ -74,11 +75,11 @@ export default function FriendsScreen(): React.ReactElement {
   }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: colors.surfaceLight }]}>
       <GradientBackground />
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Text style={styles.title}>Pia</Text>
+          <Text style={[styles.title, { color: colors.neutralDark }]}>Pia</Text>
         </View>
 
         <View style={styles.filterContainer}>
@@ -118,7 +119,6 @@ export default function FriendsScreen(): React.ReactElement {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.surfaceLight,
   },
   container: {
     flex: 1,
@@ -129,7 +129,6 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.titleH1,
-    color: colors.neutralDark,
   },
   filterContainer: {
     paddingHorizontal: 16,

@@ -16,7 +16,8 @@ import { GlassMenu } from '@/src/components/GlassMenu';
 import { useFriendsStore, RELATIONSHIP_LABELS } from '@/src/stores/friendsStore';
 import type { FriendCategory, Friend } from '@/src/stores/friendsStore';
 import { useNotificationStateStore } from '@/src/stores/notificationStateStore';
-import { colors } from '@/src/constants/colors';
+import { useTheme } from '@/src/hooks/useTheme';
+import { colors as staticColors } from '@/src/constants/colors';
 import { typography } from '@/src/constants/typography';
 
 const BUTTON_SIZE = 44;
@@ -105,6 +106,7 @@ function parseLastContactAt(dateString: string): Date {
 }
 
 export default function AddFriendScreen(): React.ReactElement {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const pendingContact = useFriendsStore((state) => state.pendingContact);
   const setPendingContact = useFriendsStore((state) => state.setPendingContact);
@@ -234,7 +236,7 @@ export default function AddFriendScreen(): React.ReactElement {
   if (!isEditMode && !pendingContact) {
     return (
       <View>
-        <Text style={styles.emptyText}>No contact selected</Text>
+        <Text style={[styles.emptyText, { color: colors.neutralGray }]}>No contact selected</Text>
       </View>
     );
   }
@@ -281,7 +283,7 @@ export default function AddFriendScreen(): React.ReactElement {
           imageUri={displayPhotoUrl ?? undefined}
           size={72}
         />
-        <Text style={styles.contactName}>{displayName}</Text>
+        <Text style={[styles.contactName, { color: colors.neutralDark }]}>{displayName}</Text>
       </View>
 
       {/* Settings rows */}
@@ -329,7 +331,7 @@ export default function AddFriendScreen(): React.ReactElement {
             entering={FadeInDown.duration(300)}
             exiting={FadeOutDown.duration(200)}
           >
-            <View style={styles.pickerPanel}>
+            <View style={[styles.pickerPanel, { backgroundColor: colors.pickerPanelBackground }]}>
               <BirthdayWheelPicker
                 value={birthday ?? { day: 1, month: 0 }}
                 onChange={setBirthday}
@@ -456,7 +458,6 @@ const styles = StyleSheet.create({
   contactName: {
     fontFamily: 'CrimsonPro_500Medium',
     fontSize: 32,
-    color: colors.neutralDark,
     textAlign: 'center',
   },
   settingsSection: {
@@ -469,7 +470,6 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...typography.body1,
-    color: colors.neutralGray,
     textAlign: 'center',
     marginTop: 100,
   },
@@ -480,10 +480,10 @@ const styles = StyleSheet.create({
     padding: 16,
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: colors.neutralGray200,
+    borderTopColor: staticColors.neutralGray200,
   },
   confirmButtonText: {
-    color: colors.primary,
+    color: staticColors.primary,
     fontSize: 20,
     fontWeight: '600',
   },
@@ -499,13 +499,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   doneButtonText: {
-    color: colors.neutralWhite,
+    color: staticColors.neutralWhite,
     fontSize: 17,
     fontWeight: '600',
   },
   pickerPanel: {
     borderRadius: 16,
     paddingVertical: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
   },
 });

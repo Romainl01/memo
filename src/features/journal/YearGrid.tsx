@@ -1,8 +1,8 @@
 import { View, StyleSheet } from 'react-native';
 
-import { colors } from '@/src/constants/colors';
+import { useTheme } from '@/src/hooks/useTheme';
+import { getCardContainerStyle } from '@/src/constants/colors';
 import { useJournalStore, JournalEntry } from '@/src/stores/journalStore';
-import { useJournalSettingsStore } from '@/src/stores/journalSettingsStore';
 import { generateYearDates, isToday, isPastOrToday } from '@/src/utils/journalDateHelpers';
 import { DayDot, DayDotStatus } from './DayDot';
 
@@ -62,7 +62,6 @@ interface DotGridProps {
   cellSize: number;
   gridWidth: number;
   entries: Record<string, JournalEntry>;
-  colorScheme: 'A' | 'B' | 'C';
   onDayPress: (date: string) => void;
 }
 
@@ -71,7 +70,6 @@ function DotGrid({
   cellSize,
   gridWidth,
   entries,
-  colorScheme,
   onDayPress,
 }: DotGridProps): React.ReactElement {
   return (
@@ -81,7 +79,6 @@ function DotGrid({
           key={date}
           size={cellSize}
           status={getDotStatus(date, entries)}
-          colorScheme={colorScheme}
           onPress={() => onDayPress(date)}
           testID={`day-dot-${date}`}
         />
@@ -101,8 +98,8 @@ function YearGrid({
   onDayPress,
   testID,
 }: YearGridProps): React.ReactElement {
+  const { colors, isDark } = useTheme();
   const entries = useJournalStore((state) => state.entries);
-  const colorScheme = useJournalSettingsStore((state) => state.colorScheme);
   const dates = generateYearDates(year);
 
   // Subtract padding from available space for grid calculation
@@ -119,13 +116,17 @@ function YearGrid({
 
   return (
     <View testID={testID} style={styles.container}>
-      <View style={styles.gridContainer}>
+      <View
+        style={[
+          styles.gridContainer,
+          getCardContainerStyle(colors, isDark),
+        ]}
+      >
         <DotGrid
           dates={dates}
           cellSize={cellSize}
           gridWidth={gridWidth}
           entries={entries}
-          colorScheme={colorScheme}
           onDayPress={onDayPress}
         />
       </View>
@@ -155,7 +156,6 @@ const styles = StyleSheet.create({
   gridContainer: {
     padding: CONTAINER_PADDING,
     borderRadius: CONTAINER_BORDER_RADIUS,
-    backgroundColor: colors.neutralWhite,
     overflow: 'hidden',
   },
   grid: {
