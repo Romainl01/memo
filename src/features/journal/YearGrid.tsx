@@ -115,21 +115,17 @@ function YearGrid({
   const gridWidth = columns * cellSize + (columns - 1) * GAP;
 
   return (
-    <View testID={testID} style={styles.container}>
-      <View
-        style={[
-          styles.gridContainer,
-          getCardContainerStyle(colors, isDark),
-        ]}
-      >
-        <DotGrid
-          dates={dates}
-          cellSize={cellSize}
-          gridWidth={gridWidth}
-          entries={entries}
-          onDayPress={onDayPress}
-        />
-      </View>
+    <View
+      testID={testID}
+      style={[styles.gridContainer, getCardContainerStyle(colors, isDark)]}
+    >
+      <DotGrid
+        dates={dates}
+        cellSize={cellSize}
+        gridWidth={gridWidth}
+        entries={entries}
+        onDayPress={onDayPress}
+      />
     </View>
   );
 }
@@ -150,13 +146,11 @@ function getDotStatus(
 }
 
 const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-  },
   gridContainer: {
     padding: CONTAINER_PADDING,
     borderRadius: CONTAINER_BORDER_RADIUS,
     overflow: 'hidden',
+    alignItems: 'center',
   },
   grid: {
     flexDirection: 'row',

@@ -110,7 +110,6 @@ const styles = StyleSheet.create({
     ...typography.titleH1,
   },
   gridContainer: {
-    alignItems: 'center',
     marginTop: 16,
     paddingHorizontal: 16,
   },
