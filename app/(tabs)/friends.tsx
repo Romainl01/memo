@@ -79,7 +79,7 @@ export default function FriendsScreen(): React.ReactElement {
       <GradientBackground />
       <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.neutralDark }]}>Pia</Text>
+          <Text style={[styles.title, { color: colors.neutralDark }]}>Friends</Text>
         </View>
 
         <View style={styles.filterContainer}>

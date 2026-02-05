@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { View, Text, Pressable, StyleSheet, StyleProp, ViewStyle, GestureResponderEvent } from 'react-native';
+import { View, Text, Pressable, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { GlassView } from 'expo-glass-effect';
 import { SymbolView } from 'expo-symbols';
 import * as Haptics from 'expo-haptics';
@@ -39,15 +39,8 @@ function CategoryFilterButton({
 }: CategoryFilterButtonProps): React.ReactElement {
   const { colors } = useTheme();
   const [showMenu, setShowMenu] = useState(false);
-  const [anchorPoint, setAnchorPoint] = useState<{ x: number; y: number } | undefined>();
 
   const selectedLabel = value ? RELATIONSHIP_LABELS[value] : 'All';
-
-  const handlePressIn = useCallback((event: GestureResponderEvent) => {
-    // Capture touch point for menu animation origin
-    const { locationX, locationY } = event.nativeEvent;
-    setAnchorPoint({ x: locationX, y: locationY });
-  }, []);
 
   const handlePress = useCallback(() => {
     Haptics.selectionAsync();
@@ -59,7 +52,6 @@ function CategoryFilterButton({
   return (
     <View style={[styles.container, style]}>
       <Pressable
-        onPressIn={handlePressIn}
         onPress={handlePress}
         testID="category-filter-button"
         accessibilityRole="button"
@@ -88,7 +80,6 @@ function CategoryFilterButton({
         direction="down"
         alignment="left"
         testID="category-filter-menu"
-        anchorPoint={anchorPoint}
       />
     </View>
   );

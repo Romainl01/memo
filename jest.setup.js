@@ -99,3 +99,57 @@ jest.mock("expo-haptics", () => ({
     Error: "error",
   },
 }));
+
+// Mock expo-apple-authentication
+jest.mock("expo-apple-authentication", () => ({
+  signInAsync: jest.fn(),
+  isAvailableAsync: jest.fn(() => Promise.resolve(true)),
+  AppleAuthenticationScope: {
+    FULL_NAME: 0,
+    EMAIL: 1,
+  },
+  AppleAuthenticationButton: ({ onPress, ...props }) => {
+    const React = require("react");
+    const { Pressable, Text } = require("react-native");
+    return React.createElement(
+      Pressable,
+      { onPress, testID: "apple-sign-in-button", ...props },
+      React.createElement(Text, null, "Sign in with Apple")
+    );
+  },
+  AppleAuthenticationButtonType: {
+    SIGN_IN: 0,
+    CONTINUE: 1,
+  },
+  AppleAuthenticationButtonStyle: {
+    BLACK: 0,
+    WHITE: 1,
+    WHITE_OUTLINE: 2,
+  },
+}));
+
+// Mock Supabase client
+jest.mock("@/lib/supabase/client", () => {
+  const mockSubscription = { unsubscribe: jest.fn() };
+  return {
+    supabase: {
+      auth: {
+        getSession: jest.fn(() =>
+          Promise.resolve({ data: { session: null }, error: null })
+        ),
+        signInWithIdToken: jest.fn(() =>
+          Promise.resolve({ data: { session: null, user: null }, error: null })
+        ),
+        signOut: jest.fn(() => Promise.resolve({ error: null })),
+        onAuthStateChange: jest.fn(() => ({
+          data: { subscription: mockSubscription },
+        })),
+      },
+      from: jest.fn(() => ({
+        update: jest.fn(() => ({
+          eq: jest.fn(() => Promise.resolve({ error: null })),
+        })),
+      })),
+    },
+  };
+});
