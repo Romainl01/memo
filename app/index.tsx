@@ -6,7 +6,7 @@ import { useOnboardingStore } from '@/src/stores/onboardingStore';
  * Waits for the store to hydrate from AsyncStorage before deciding.
  * The splash screen remains visible until hydration completes (handled in _layout.tsx).
  */
-export default function Index() {
+export default function Index(): React.ReactElement | null {
   const hasCompleted = useOnboardingStore((s) => s.hasCompletedOnboarding);
   const hasHydrated = useOnboardingStore((s) => s._hasHydrated);
 

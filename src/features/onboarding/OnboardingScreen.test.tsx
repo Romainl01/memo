@@ -30,7 +30,7 @@ describe('OnboardingScreen', () => {
 
   it('should render the welcome title', () => {
     const { getByText } = render(<OnboardingScreen />);
-    expect(getByText('Say hello to Memo')).toBeTruthy();
+    expect(getByText('meet memo')).toBeTruthy();
   });
 
   it('should render the welcome subtitle', () => {

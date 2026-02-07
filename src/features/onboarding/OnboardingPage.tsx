@@ -80,13 +80,13 @@ export function OnboardingPage({ animationKey }: OnboardingPageProps): React.Rea
 
         <Animated.View style={titleStyle}>
           <Text style={[styles.title, { color: colors.neutralDark }]}>
-            Say hello to Memo
+            meet memo
           </Text>
         </Animated.View>
 
         <Animated.View style={subtitleStyle}>
           <Text style={[styles.subtitle, { color: colors.neutralGray }]}>
-            Stay close to the people who matter — track your moods, reflect on your days, and never forget to reach out
+            Stay close to the people who matter. Track your moods, reflect on your days, and never forget to reach out.
           </Text>
         </Animated.View>
       </View>
@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   subtitle: {
-    ...typography.body1,
+    ...typography.mono1,
     textAlign: 'center',
     lineHeight: 24,
   },

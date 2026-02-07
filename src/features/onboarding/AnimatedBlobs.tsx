@@ -11,7 +11,7 @@ import Animated, {
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/src/hooks/useTheme';
-import { lightAurora, darkAurora } from './onboardingColors';
+import { lightAurora, darkAurora, type AuroraPalette } from './onboardingColors';
 
 interface OrbConfig {
   size: number;
@@ -21,21 +21,29 @@ interface OrbConfig {
   driftY: number;
   cycle: number;
   scaleMax: number;
-  colorKey: 'orb1' | 'orb2' | 'orb3';
+  colorKey: 'orb1' | 'orb2' | 'orb3' | 'orb4';
 }
 
-const ORB_OPACITY = 0.7;
 const EASING = Easing.inOut(Easing.ease);
 
 const ORBS: OrbConfig[] = [
-  { size: 500, left: -80, top: -100, driftX: 140, driftY: 100, cycle: 18000, scaleMax: 1.2, colorKey: 'orb1' },
-  { size: 450, left: 120, top: 200, driftX: -120, driftY: 80, cycle: 15000, scaleMax: 1.15, colorKey: 'orb2' },
-  { size: 400, left: -40, top: 500, driftX: 160, driftY: -120, cycle: 20000, scaleMax: 1.2, colorKey: 'orb3' },
+  { size: 500, left: -80, top: -100, driftX: 140, driftY: 100, cycle: 9000, scaleMax: 1.2, colorKey: 'orb1' },
+  { size: 450, left: 120, top: 200, driftX: -120, driftY: 80, cycle: 8000, scaleMax: 1.15, colorKey: 'orb2' },
+  { size: 400, left: -40, top: 500, driftX: 160, driftY: -120, cycle: 10000, scaleMax: 1.2, colorKey: 'orb3' },
+  { size: 350, left: 160, top: 100, driftX: -100, driftY: 130, cycle: 11000, scaleMax: 1.15, colorKey: 'orb4' },
 ];
 
-function Orb({ config }: { config: OrbConfig }): React.ReactElement {
-  const { isDark } = useTheme();
-  const palette = isDark ? darkAurora : lightAurora;
+const ORB_OPACITY_LIGHT = 0.8;
+const ORB_OPACITY_DARK = 0.65;
+
+interface OrbProps {
+  config: OrbConfig;
+  palette: AuroraPalette;
+  isDark: boolean;
+}
+
+function Orb({ config, palette, isDark }: OrbProps): React.ReactElement {
+  const orbOpacity = isDark ? ORB_OPACITY_DARK : ORB_OPACITY_LIGHT;
   const translateX = useSharedValue(0);
   const translateY = useSharedValue(0);
   const scale = useSharedValue(1);
@@ -89,6 +97,7 @@ function Orb({ config }: { config: OrbConfig }): React.ReactElement {
           left: config.left,
           top: config.top,
           backgroundColor: palette[config.colorKey],
+          opacity: orbOpacity,
         },
         animatedStyle,
       ]}
@@ -97,19 +106,20 @@ function Orb({ config }: { config: OrbConfig }): React.ReactElement {
 }
 
 export function AnimatedBlobs(): React.ReactElement {
-  const { colors, isDark } = useTheme();
+  const { isDark } = useTheme();
+  const palette = isDark ? darkAurora : lightAurora;
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       <LinearGradient
-        colors={[colors.primaryGradientStart, colors.primaryGradientEnd]}
+        colors={[palette.gradientStart, palette.gradientEnd]}
         style={StyleSheet.absoluteFill}
       />
       {ORBS.map((config, index) => (
-        <Orb key={index} config={config} />
+        <Orb key={index} config={config} palette={palette} isDark={isDark} />
       ))}
       <BlurView
-        intensity={60}
+        intensity={50}
         tint={isDark ? 'dark' : 'light'}
         style={StyleSheet.absoluteFill}
       />
@@ -120,6 +130,5 @@ export function AnimatedBlobs(): React.ReactElement {
 const styles = StyleSheet.create({
   orb: {
     position: 'absolute',
-    opacity: ORB_OPACITY,
   },
 });
