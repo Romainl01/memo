@@ -1,7 +1,8 @@
 import { Pressable, View, StyleSheet } from 'react-native';
 
 import { useTheme } from '@/src/hooks/useTheme';
-import { journalColorScheme, JournalSchemeColors } from '@/src/constants/colors';
+import { journalColorScheme, JournalSchemeColors, moodColors } from '@/src/constants/colors';
+import type { Mood } from '@/src/stores/journalStore';
 
 export type DayDotStatus =
   | 'past-with-entry'
@@ -13,6 +14,8 @@ interface DayDotProps {
   status: DayDotStatus;
   /** Size of the cell containing the dot */
   size: number;
+  /** Mood for the day (affects dot color) */
+  mood?: Mood | null;
   onPress?: () => void;
   testID?: string;
 }
@@ -29,6 +32,7 @@ interface DayDotProps {
 function DayDot({
   status,
   size,
+  mood,
   onPress,
   testID,
 }: DayDotProps): React.ReactElement {
@@ -66,7 +70,7 @@ function DayDot({
             width: dotSize,
             height: dotSize,
             borderRadius: dotSize / 2,
-            backgroundColor: getDotColor(status, scheme),
+            backgroundColor: getDotColor(status, scheme, mood),
           },
           isToday && {
             borderWidth: ringWidth,
@@ -80,12 +84,14 @@ function DayDot({
 
 function getDotColor(
   status: DayDotStatus,
-  scheme: JournalSchemeColors
+  scheme: JournalSchemeColors,
+  mood?: Mood | null
 ): string {
   switch (status) {
     case 'past-with-entry':
     case 'today':
-      return scheme.filled;
+      // Use mood color if set, otherwise default scheme color
+      return mood ? moodColors[mood] : scheme.filled;
     case 'past-without-entry':
       return scheme.pastEmpty;
     case 'future':

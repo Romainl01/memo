@@ -104,4 +104,58 @@ describe('DayDot', () => {
       expect(getByTestId('custom-id')).toBeTruthy();
     });
   });
+
+  describe('mood prop', () => {
+    it('should render with mood prop', () => {
+      const { getByTestId } = render(
+        <DayDot
+          status="past-with-entry"
+          size={DEFAULT_SIZE}
+          mood="great"
+          testID="day-dot"
+        />
+      );
+
+      expect(getByTestId('day-dot')).toBeTruthy();
+    });
+
+    it('should render with null mood', () => {
+      const { getByTestId } = render(
+        <DayDot
+          status="past-with-entry"
+          size={DEFAULT_SIZE}
+          mood={null}
+          testID="day-dot"
+        />
+      );
+
+      expect(getByTestId('day-dot')).toBeTruthy();
+    });
+
+    it('should render with today status and mood', () => {
+      const { getByTestId } = render(
+        <DayDot status="today" size={DEFAULT_SIZE} mood="good" testID="day-dot" />
+      );
+
+      expect(getByTestId('day-dot')).toBeTruthy();
+    });
+
+    it('should handle all mood values', () => {
+      const moods = ['awful', 'bad', 'okay', 'good', 'great'] as const;
+
+      moods.forEach((mood) => {
+        const { getByTestId, unmount } = render(
+          <DayDot
+            status="past-with-entry"
+            size={DEFAULT_SIZE}
+            mood={mood}
+            testID={`day-dot-${mood}`}
+          />
+        );
+
+        expect(getByTestId(`day-dot-${mood}`)).toBeTruthy();
+        unmount();
+      });
+    });
+  });
 });

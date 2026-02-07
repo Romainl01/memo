@@ -140,6 +140,20 @@ export const journalColorScheme = {
 export type JournalSchemeVariant = keyof typeof journalColorScheme;
 
 /**
+ * Mood colors for journal entries
+ * Personal journal color system - from difficult (dark) to amazing (gold star)
+ */
+export const moodColors = {
+  awful: '#4A4A4A', // Dark charcoal - difficult day
+  bad: '#E5484D',   // Red - rough
+  okay: '#F28C59',  // Primary coral - neutral
+  good: '#5B8A60',  // Sage green - positive
+  great: '#D4A574', // Gold - amazing (star gets this)
+} as const;
+
+export type MoodColorKey = keyof typeof moodColors;
+
+/**
  * Journal scheme colors type
  */
 export interface JournalSchemeColors {

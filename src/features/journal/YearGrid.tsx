@@ -79,6 +79,7 @@ function DotGrid({
           key={date}
           size={cellSize}
           status={getDotStatus(date, entries)}
+          mood={entries[date]?.mood}
           onPress={() => onDayPress(date)}
           testID={`day-dot-${date}`}
         />

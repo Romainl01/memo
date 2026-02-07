@@ -1,4 +1,4 @@
-import { useJournalStore } from './journalStore';
+import { useJournalStore, Mood } from './journalStore';
 
 describe('journalStore', () => {
   beforeEach(() => {
@@ -68,6 +68,89 @@ describe('journalStore', () => {
 
       const entry = getEntryByDate('2025-01-15');
       expect(entry?.content).toBe('');
+    });
+
+    it('should create entry with mood', () => {
+      const { upsertEntry, getEntryByDate } = useJournalStore.getState();
+
+      upsertEntry('2025-01-15', 'Great day!', 'great');
+
+      const entry = getEntryByDate('2025-01-15');
+      expect(entry?.mood).toBe('great');
+    });
+
+    it('should create entry with null mood when not provided', () => {
+      const { upsertEntry, getEntryByDate } = useJournalStore.getState();
+
+      upsertEntry('2025-01-15', 'Content');
+
+      const entry = getEntryByDate('2025-01-15');
+      expect(entry?.mood).toBeNull();
+    });
+
+    it('should update content without affecting existing mood', () => {
+      const { upsertEntry, getEntryByDate } = useJournalStore.getState();
+
+      upsertEntry('2025-01-15', 'Original', 'good');
+      upsertEntry('2025-01-15', 'Updated');
+
+      const entry = getEntryByDate('2025-01-15');
+      expect(entry?.content).toBe('Updated');
+      expect(entry?.mood).toBe('good'); // Mood preserved
+    });
+
+    it('should update mood when explicitly passed', () => {
+      const { upsertEntry, getEntryByDate } = useJournalStore.getState();
+
+      upsertEntry('2025-01-15', 'Content', 'good');
+      upsertEntry('2025-01-15', 'Content', 'bad');
+
+      const entry = getEntryByDate('2025-01-15');
+      expect(entry?.mood).toBe('bad');
+    });
+
+    it('should clear mood when null is explicitly passed', () => {
+      const { upsertEntry, getEntryByDate } = useJournalStore.getState();
+
+      upsertEntry('2025-01-15', 'Content', 'great');
+      upsertEntry('2025-01-15', 'Content', null);
+
+      const entry = getEntryByDate('2025-01-15');
+      expect(entry?.mood).toBeNull();
+    });
+  });
+
+  describe('setMood', () => {
+    it('should set mood on existing entry', () => {
+      const { upsertEntry, setMood, getEntryByDate } = useJournalStore.getState();
+
+      upsertEntry('2025-01-15', 'Content');
+      setMood('2025-01-15', 'okay');
+
+      const entry = getEntryByDate('2025-01-15');
+      expect(entry?.mood).toBe('okay');
+      expect(entry?.content).toBe('Content'); // Content preserved
+    });
+
+    it('should create empty entry when setting mood on non-existent date', () => {
+      const { setMood, getEntryByDate } = useJournalStore.getState();
+
+      setMood('2025-01-15', 'awful');
+
+      const entry = getEntryByDate('2025-01-15');
+      expect(entry).toBeDefined();
+      expect(entry?.mood).toBe('awful');
+      expect(entry?.content).toBe('');
+    });
+
+    it('should clear mood when null is passed', () => {
+      const { upsertEntry, setMood, getEntryByDate } = useJournalStore.getState();
+
+      upsertEntry('2025-01-15', 'Content', 'great');
+      setMood('2025-01-15', null);
+
+      const entry = getEntryByDate('2025-01-15');
+      expect(entry?.mood).toBeNull();
     });
   });
 
