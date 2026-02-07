@@ -12,13 +12,14 @@ import { SymbolView } from 'expo-symbols';
 
 import { useTheme } from '@/src/hooks/useTheme';
 import { typography } from '@/src/constants/typography';
-import { useJournalStore } from '@/src/stores/journalStore';
+import { useJournalStore, Mood } from '@/src/stores/journalStore';
 import { useToastStore } from '@/src/stores/toastStore';
 import { useAutoSave } from '@/src/hooks/useAutoSave';
 import { getRandomCongratsMessage } from '@/src/utils/journalMessages';
 import { GlassButton } from '@/src/components/GlassButton';
 import { GlassDateChip } from '@/src/components/GlassDateChip';
 import { FloatingDoneButton } from '@/src/components/FloatingDoneButton';
+import { MoodPicker } from '@/src/components/MoodPicker';
 import { SwipeableJournalContainer } from '@/src/features/journal/SwipeableJournalContainer';
 
 /**
@@ -38,12 +39,14 @@ export default function JournalEntryScreen(): React.ReactElement {
   const showToast = useToastStore((state) => state.showToast);
 
   const [content, setContent] = useState('');
+  const [mood, setMood] = useState<Mood | null>(null);
 
-  // Load existing content when screen mounts or date changes
+  // Load existing content and mood when screen mounts or date changes
   useEffect(() => {
     if (date) {
       const entry = getEntryByDate(date);
       setContent(entry?.content ?? '');
+      setMood(entry?.mood ?? null);
     }
   }, [date, getEntryByDate]);
 
@@ -51,10 +54,10 @@ export default function JournalEntryScreen(): React.ReactElement {
   const handleSave = useCallback(
     (contentToSave: string) => {
       if (date) {
-        upsertEntry(date, contentToSave);
+        upsertEntry(date, contentToSave, mood);
       }
     },
-    [date, upsertEntry]
+    [date, upsertEntry, mood]
   );
 
   const { saveNow } = useAutoSave({
@@ -110,6 +113,15 @@ export default function JournalEntryScreen(): React.ReactElement {
         <View style={styles.spacer} />
       </View>
 
+      {/* Mood Picker */}
+      <View style={styles.moodRow}>
+        <MoodPicker
+          selectedMood={mood}
+          onMoodChange={setMood}
+          testID="mood-picker"
+        />
+      </View>
+
       {/* Swipeable Editor */}
       <SwipeableJournalContainer
         currentDate={date}
@@ -159,6 +171,11 @@ const styles = StyleSheet.create({
   spacer: {
     width: 40,
     height: 40,
+  },
+  moodRow: {
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    alignItems: 'center',
   },
   editorContainer: {
     flex: 1,

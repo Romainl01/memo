@@ -69,6 +69,20 @@ jest.mock("@react-native-async-storage/async-storage", () =>
   require("@react-native-async-storage/async-storage/jest/async-storage-mock")
 );
 
+// Mock expo-linear-gradient - LinearGradient renders as a regular View in tests
+jest.mock("expo-linear-gradient", () => {
+  const { View } = require("react-native");
+  const React = require("react");
+  return {
+    LinearGradient: ({ children, style, ...props }) =>
+      React.createElement(
+        View,
+        { style, testID: "linear-gradient", ...props },
+        children
+      ),
+  };
+});
+
 // Mock expo-blur - BlurView renders as a regular View in tests
 jest.mock("expo-blur", () => {
   const { View } = require("react-native");

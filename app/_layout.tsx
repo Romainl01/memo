@@ -24,6 +24,7 @@ import { NotificationService } from '@/src/services/notificationService';
 import { useFriendsStore } from '@/src/stores/friendsStore';
 import { useNotificationStateStore } from '@/src/stores/notificationStateStore';
 import { useNotificationPermission } from '@/src/hooks/useNotificationPermission';
+import { useOnboardingStore } from '@/src/stores/onboardingStore';
 import { ToastProvider } from '@/src/components/Toast';
 import { useTheme } from '@/src/hooks/useTheme';
 
@@ -37,6 +38,7 @@ export default function RootLayout(): React.ReactElement | null {
   const { isDark, resolvedTheme } = useTheme();
   const responseListener = useRef<Notifications.Subscription | undefined>(undefined);
 
+  const onboardingHydrated = useOnboardingStore((s) => s._hasHydrated);
   const friends = useFriendsStore((state) => state.friends);
   const {
     shouldSendBirthdayNotification,
@@ -102,12 +104,12 @@ export default function RootLayout(): React.ReactElement | null {
   }, [resolvedTheme]);
 
   useEffect(() => {
-    if (fontsLoaded) {
+    if (fontsLoaded && onboardingHydrated) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, onboardingHydrated]);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || !onboardingHydrated) {
     return null;
   }
 
@@ -118,6 +120,7 @@ export default function RootLayout(): React.ReactElement | null {
           <ToastProvider>
             <StatusBar style={isDark ? 'light' : 'dark'} />
             <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(onboarding)" />
               <Stack.Screen name="(tabs)" />
               <Stack.Screen
                 name="add-friend"
